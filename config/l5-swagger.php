@@ -4,6 +4,9 @@ return [
     'default' => 'default',
     'documentations' => [
         'default' => [
+            'server' => [
+                'url' => env('L5_SWAGGER_CONST_HOST', 'http://127.0.0.1:8000'),
+            ],
             'api' => [
                 'title' => 'L5 Swagger UI',
             ],
