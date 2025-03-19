@@ -21,3 +21,5 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Allow Swagger documentation
+!public/api/documentation.json
