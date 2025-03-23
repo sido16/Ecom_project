@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 
 
   /**
@@ -91,8 +92,9 @@ class AuthController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
+            'role' => 'user', 
         ]);
-    
+        event(new Registered($user));
         // Generate a token
         $token = $user->createToken('auth_token')->plainTextToken;
     
@@ -161,4 +163,30 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ]);
     }
+
+    public function logout(Request $request)
+    {
+    // Revoke the current token used in this request
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json([
+        'message' => 'Successfully logged out'
+    ], 200);
+    }
+
+
+    public function getUser(Request $request)
+{
+    // Return the authenticated user
+    $user = $request->user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Unauthenticated'], 401);
+    }
+
+    return response()->json([
+        'user' => $user,
+        'message' => 'User retrieved successfully'
+    ], 200);
+}
 }
