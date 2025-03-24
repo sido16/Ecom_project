@@ -163,7 +163,28 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ]);
     }
-
+/**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Log out the authenticated user",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successfully logged out",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successfully logged out")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated - No valid token provided",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
+     */
     public function logout(Request $request)
     {
     // Revoke the current token used in this request
@@ -174,7 +195,38 @@ class AuthController extends Controller
     ], 200);
     }
 
-
+/**
+     * @OA\Get(
+     *     path="/api/user",
+     *     summary="Get the authenticated user's details",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="User retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="johndoe@example.com"),
+     *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
+     *                 @OA\Property(property="role", type="string", example="user"),
+     *                 @OA\Property(property="email_verified_at", type="string", format="date-time", example=null),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-22T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-22T12:00:00Z")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="User retrieved successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated - No valid token provided",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
+     */
     public function getUser(Request $request)
 {
     // Return the authenticated user
