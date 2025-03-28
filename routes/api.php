@@ -12,9 +12,13 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill(); // Marks the email as verified
+    $request->fulfill(); 
     return response()->json(['message' => 'Email verified successfully']);
 })->middleware(['signed'])->name('verification.verify');
 
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'getUser']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'getUser']);
+    Route::put('/user/update', [AuthController::class, 'update']);
+    Route::put('/user/update-password', [AuthController::class, 'updatePassword']); 
+});
