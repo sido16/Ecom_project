@@ -27,83 +27,83 @@ use Illuminate\Auth\Events\Registered;
 class AuthController extends Controller
 {
     /**
-     * @OA\Post(
-     *     path="/api/register",
-     *     summary="Register a new user",
-     *     tags={"Authentication"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"full_name","email","phone_number","password"},
-     *             @OA\Property(property="full_name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", example="johndoe@example.com"),
-     *             @OA\Property(property="phone_number", type="string", example="0123456789"),
-     *             @OA\Property(property="password", type="string", example="Password123")
-     *         ),
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User registered successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="user", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", example="johndoe@example.com"),
-     *                 @OA\Property(property="phone_number", type="string", example="0123456789")
-     *             ),
-     *             @OA\Property(property="token", type="string", example="1|abcd1234tokenexample")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Validation failed")
-     *         )
-     *     )
-     * )
-     */
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone_number' => [
-                'required',
-                'regex:/^\d{10}$/', // Ensures exactly 10 digits
-                'unique:users'
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:8', // Minimum 8 characters
-                'regex:/[A-Z]/', // At least one uppercase letter
-                'regex:/[0-9]/', // At least one number
-            ],
-        ]);
-    
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-    
-        // Create the user
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'password' => Hash::make($request->password),
-            'role' => $request->role, 
-        ]);
-        event(new Registered($user));
-        // Generate a token
-        $token = $user->createToken('auth_token')->plainTextToken;
-    
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ], 201);
+ * @OA\Post(
+ *     path="/api/register",
+ *     summary="Register a new user",
+ *     tags={"Authentication"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"full_name","email","phone_number","password"},
+ *             @OA\Property(property="full_name", type="string", example="John Doe"),
+ *             @OA\Property(property="email", type="string", example="johndoe@example.com"),
+ *             @OA\Property(property="phone_number", type="string", example="0123456789"),
+ *             @OA\Property(property="password", type="string", example="Password123")
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="User registered successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="user", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+ *                 @OA\Property(property="email", type="string", example="johndoe@example.com"),
+ *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
+ *                 @OA\Property(property="role", type="string", example="user")
+ *             ),
+ *             @OA\Property(property="token", type="string", example="1|abcd1234tokenexample")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The email field is required.")
+ *         )
+ *     )
+ * )
+ */
+public function register(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'full_name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'phone_number' => [
+            'required',
+            'regex:/^\d{10}$/', // Ensures exactly 10 digits
+            'unique:users'
+        ],
+        'password' => [
+            'required',
+            'string',
+            'min:8', // Minimum 8 characters
+            'regex:/[A-Z]/', // At least one uppercase letter
+            'regex:/[0-9]/', // At least one number
+        ],
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
     }
-    
+
+    // Create the user with role hardcoded as 'user'
+    $user = User::create([
+        'full_name' => $request->full_name,
+        'email' => $request->email,
+        'phone_number' => $request->phone_number,
+        'password' => Hash::make($request->password),
+        'role' => 'user', // Hardcoded to 'user'
+    ]);
+
+    event(new Registered($user));
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'user' => $user,
+        'token' => $token,
+    ], 201);
+}
     /**
      * @OA\Post(
      *     path="/api/login",
@@ -410,7 +410,7 @@ public function updatePassword(Request $request)
     $user->save();
 
     return response()->json(['message' => 'Password updated successfully'], 200);
-}
+}   
 
 
 }
