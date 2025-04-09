@@ -26,7 +26,7 @@ use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
-    /**
+   /**
  * @OA\Post(
  *     path="/api/register",
  *     summary="Register a new user",
@@ -43,16 +43,18 @@ class AuthController extends Controller
  *     ),
  *     @OA\Response(
  *         response=201,
- *         description="User registered successfully",
+ *         description="User registered successfully, verification email sent",
  *         @OA\JsonContent(
  *             @OA\Property(property="user", type="object",
  *                 @OA\Property(property="id", type="integer", example=1),
  *                 @OA\Property(property="full_name", type="string", example="John Doe"),
  *                 @OA\Property(property="email", type="string", example="johndoe@example.com"),
  *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
- *                 @OA\Property(property="role", type="string", example="user")
+ *                 @OA\Property(property="role", type="string", example="user"),
+ *                 @OA\Property(property="email_verified_at", type="string", format="date-time", example=null)
  *             ),
- *             @OA\Property(property="token", type="string", example="1|abcd1234tokenexample")
+ *             @OA\Property(property="token", type="string", example="1|abcd1234tokenexample"),
+ *             @OA\Property(property="message", type="string", example="Please verify your email address.")
  *         )
  *     ),
  *     @OA\Response(
@@ -71,15 +73,15 @@ public function register(Request $request)
         'email' => 'required|string|email|max:255|unique:users',
         'phone_number' => [
             'required',
-            'regex:/^\d{10}$/', // Ensures exactly 10 digits
+            'regex:/^\d{10}$/',
             'unique:users'
         ],
         'password' => [
             'required',
             'string',
-            'min:8', // Minimum 8 characters
-            'regex:/[A-Z]/', // At least one uppercase letter
-            'regex:/[0-9]/', // At least one number
+            'min:8',
+            'regex:/[A-Z]/',
+            'regex:/[0-9]/',
         ],
     ]);
 
@@ -87,13 +89,12 @@ public function register(Request $request)
         return response()->json($validator->errors(), 422);
     }
 
-    // Create the user with role hardcoded as 'user'
     $user = User::create([
         'full_name' => $request->full_name,
         'email' => $request->email,
         'phone_number' => $request->phone_number,
         'password' => Hash::make($request->password),
-        'role' => 'user', // Hardcoded to 'user'
+        'role' => 'user',
     ]);
 
     event(new Registered($user));
@@ -102,67 +103,78 @@ public function register(Request $request)
     return response()->json([
         'user' => $user,
         'token' => $token,
+        'message' => 'Please verify your email address.'
     ], 201);
 }
-    /**
-     * @OA\Post(
-     *     path="/api/login",
-     *     summary="User login",
-     *     tags={"Authentication"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", example="johndoe@example.com"),
-     *             @OA\Property(property="password", type="string", example="Password123")
-     *         ),
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Login successful",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Welcome, John Doe"),
-     *             @OA\Property(property="access_token", type="string", example="1|abcd1234tokenexample"),
-     *             @OA\Property(property="token_type", type="string", example="Bearer")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized - Invalid credentials",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The provided credentials are incorrect.")
-     *         )
-     *     )
-     * )
-     */
-    public function login(Request $request)
-    {
-        // Validate the incoming request data
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+   /**
+ * @OA\Post(
+ *     path="/api/login",
+ *     summary="User login",
+ *     tags={"Authentication"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"email","password"},
+ *             @OA\Property(property="email", type="string", example="johndoe@example.com"),
+ *             @OA\Property(property="password", type="string", example="Password123")
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Login successful",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Welcome, John Doe"),
+ *             @OA\Property(property="access_token", type="string", example="1|abcd1234tokenexample"),
+ *             @OA\Property(property="token_type", type="string", example="Bearer")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error or unverified email",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The provided credentials are incorrect."),
+ *             @OA\Property(property="message", type="string", example="Please verify your email address before logging in.")
+ *         )
+ *     )
+ * )
+ */
+public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|string|email',
+        'password' => 'required|string',
+    ]);
 
-        // Attempt to authenticate the user
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
+    \Log::info('Login attempt for email: ' . $request->email);
 
-        // Retrieve the authenticated user
-        $user = User::where('email', $request->email)->firstOrFail();
-
-        // Generate an authentication token for the user
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Return a JSON response with the token
+    if (!Auth::attempt($request->only('email', 'password'))) {
+        \Log::info('Credentials incorrect for: ' . $request->email);
         return response()->json([
-            'message' => 'Welcome, ' .$user->full_name,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+            'message' => 'The provided credentials are incorrect.'
+        ], 422);
     }
+
+    $user = User::where('email', $request->email)->firstOrFail();
+
+    \Log::info('User found: ' . $user->email . ', Verified: ' . ($user->hasVerifiedEmail() ? 'Yes' : 'No'));
+
+    if (!$user->hasVerifiedEmail()) {
+        \Log::info('Email not verified for: ' . $user->email);
+        return response()->json([
+            'message' => 'Please verify your email address before logging in.'
+        ], 422);
+    }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    \Log::info('Token generated for: ' . $user->email);
+
+    return response()->json([
+        'message' => 'Welcome, ' . $user->full_name,
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+    ]);
+}
 /**
      * @OA\Post(
      *     path="/api/logout",
@@ -413,4 +425,73 @@ public function updatePassword(Request $request)
 }   
 
 
+
+
+/**
+ * @OA\Get(
+ *     path="/api/email/verify/{id}/{hash}",
+ *     summary="Verify a user's email address",
+ *     tags={"Authentication"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer"),
+ *         description="The user ID"
+ *     ),
+ *     @OA\Parameter(
+ *         name="hash",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="string"),
+ *         description="The email verification hash"
+ *     ),
+ *     @OA\Parameter(
+ *         name="expires",
+ *         in="query",
+ *         required=true,
+ *         @OA\Schema(type="integer"),
+ *         description="Expiration timestamp"
+ *     ),
+ *     @OA\Parameter(
+ *         name="signature",
+ *         in="query",
+ *         required=true,
+ *         @OA\Schema(type="string"),
+ *         description="Signature for URL validation"
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Email verified successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Email verified successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid verification link",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Invalid verification link")
+ *         )
+ *     )
+ * )
+ */
+public function verifyEmail(Request $request, $id, $hash)
+{
+    $user = User::findOrFail($id);
+
+    if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        return response()->json(['message' => 'Invalid verification link'], 400);
+    }
+
+    if ($user->hasVerifiedEmail()) {
+        return response()->json(['message' => 'Email already verified'], 200);
+    }
+
+    if ($user->markEmailAsVerified()) {
+        event(new \Illuminate\Auth\Events\Verified($user));
+    }
+
+    return response()->json(['message' => 'Email verified successfully'], 200);
+}
 }
