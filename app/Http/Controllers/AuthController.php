@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Log; 
 
 
   /**
@@ -138,6 +140,7 @@ public function register(Request $request)
  *     )
  * )
  */
+
 public function login(Request $request)
 {
     $request->validate([
@@ -256,40 +259,41 @@ public function login(Request $request)
             'message' => 'User retrieved successfully'
         ], 200);
     }
-
+   
+    
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/api/user/update",
-     *     summary="Update authenticated user's information",
+     *     summary="Update authenticated user's profile",
+     *     description="Updates the authenticated user's profile, including an optional profile picture upload.",
      *     tags={"Authentication"},
      *     security={{"sanctum": {}}},
      *     @OA\RequestBody(
      *         required=false,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="full_name", type="string", example="Jane Doe"),
-     *             @OA\Property(property="email", type="string", example="janedoe@example.com"),
-     *             @OA\Property(property="phone_number", type="string", example="9876543210"),
-     *             @OA\Property(property="picture", type="string", example="https://example.com/newpic.jpg", nullable=true),
-     *             @OA\Property(property="address", type="string", example="456 Oak Ave", nullable=true),
-     *             @OA\Property(property="city", type="string", example="Los Angeles", nullable=true)
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="full_name", type="string", maxLength=255, example="John Doe", description="User's full name"),
+     *                 @OA\Property(property="email", type="string", format="email", maxLength=255, example="john.doe@example.com", description="User's email (must be unique)"),
+     *                 @OA\Property(property="phone_number", type="string", pattern="^\d{10}$", example="0123456789", description="User's 10-digit phone number (must be unique)"),
+     *                 @OA\Property(property="picture", type="string", format="binary", description="Profile picture file (JPEG/PNG/JPG, max 2MB)"),
+     *                 @OA\Property(property="address", type="string", maxLength=255, example="123 Main St", description="User's address", nullable=true),
+     *                 @OA\Property(property="city", type="string", maxLength=255, example="New York", description="User's city", nullable=true)
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="User updated successfully",
+     *         description="Profile updated successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="user", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="full_name", type="string", example="Jane Doe"),
-     *                 @OA\Property(property="email", type="string", example="janedoe@example.com"),
-     *                 @OA\Property(property="phone_number", type="string", example="9876543210"),
-     *                 @OA\Property(property="role", type="string", example="user"),
-     *                 @OA\Property(property="picture", type="string", example="https://example.com/newpic.jpg", nullable=true),
-     *                 @OA\Property(property="address", type="string", example="456 Oak Ave", nullable=true),
-     *                 @OA\Property(property="city", type="string", example="Los Angeles", nullable=true),
-     *                 @OA\Property(property="email_verified_at", type="string", format="date-time", example=null),
-     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-23T12:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-23T12:05:00Z")
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *                 @OA\Property(property="picture", type="string", example="/storage/pictures/user_1_123456789.jpg"),
+     *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
+     *                 @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
+     *                 @OA\Property(property="city", type="string", example="New York", nullable=true)
      *             ),
      *             @OA\Property(property="message", type="string", example="User updated successfully")
      *         )
@@ -298,59 +302,64 @@ public function login(Request $request)
      *         response=400,
      *         description="Validation error",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Validation failed")
+     *             @OA\Property(property="full_name", type="array", @OA\Items(type="string", example="The full name must be a string.")),
+     *             @OA\Property(property="email", type="array", @OA\Items(type="string", example="The email has already been taken.")),
+     *             @OA\Property(property="picture", type="array", @OA\Items(type="string", example="The picture must be an image."))
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated - No valid token provided",
+     *         description="Unauthenticated",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Unauthenticated")
      *         )
      *     )
      * )
      */
-    public function update(Request $request)
-    {
-        $user = $request->user();
+    
 
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-            'phone_number' => [
-                'sometimes',
-                'regex:/^\d{10}$/',
-                'unique:users,phone_number,' . $user->id,
-            ],
-            'picture' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        // Update only the fields provided in the request
-        $user->update($request->only([
-            'full_name',
-            'email',
-            'phone_number',
-            'picture',
-            'address',
-            'city'
-        ]));
-
-        return response()->json([
-            'user' => $user,
-            'message' => 'User updated successfully'
-        ], 200);
-    }
-
+     public function update(Request $request)
+     {
+         $user = $request->user();
+     
+         if (!$user) {
+             return response()->json(['message' => 'Unauthenticated'], 401);
+         }
+     
+         $validator = Validator::make($request->all(), [
+             'full_name' => 'sometimes|string|max:255',
+             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+             'phone_number' => [
+                 'sometimes',
+                 'regex:/^\d{10}$/',
+                 'unique:users,phone_number,' . $user->id,
+             ],
+             'picture' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+             'address' => 'nullable|string|max:255',
+             'city' => 'nullable|string|max:255',
+         ]);
+     
+         if ($validator->fails()) {
+             return response()->json($validator->errors(), 400);
+         }
+     
+         $data = $request->only(['full_name', 'email', 'phone_number', 'address', 'city']);
+         if ($request->hasFile('picture')) {
+             if ($user->picture && Storage::disk('public')->exists(str_replace('/storage/', '', $user->picture))) {
+                 Storage::disk('public')->delete(str_replace('/storage/', '', $user->picture));
+             }
+             $file = $request->file('picture');
+             $path = $file->storeAs('pictures', "user_{$user->id}_" . time() . '.' . $file->extension(), 'public');
+             $data['picture'] = Storage::url($path);
+         }
+     
+         $user->update($data);
+     
+         return response()->json([
+             'user' => $user,
+             'message' => 'User updated successfully'
+         ], 200);
+     }
     /**
  * @OA\Put(
  *     path="/api/user/update-password",
