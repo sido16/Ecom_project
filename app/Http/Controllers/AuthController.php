@@ -108,39 +108,39 @@ public function register(Request $request)
         'message' => 'Please verify your email address.'
     ], 201);
 }
-   /**
+
+/**
  * @OA\Post(
  *     path="/api/login",
- *     summary="User login",
+ *     summary="Authenticate a user and return a token",
+ *     description="Logs in a user with email and password, returning a Sanctum token if credentials are valid and email is verified.",
  *     tags={"Authentication"},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"email","password"},
- *             @OA\Property(property="email", type="string", example="johndoe@example.com"),
- *             @OA\Property(property="password", type="string", example="Password123")
- *         ),
+ *             required={"email", "password"},
+ *             @OA\Property(property="email", type="string", format="email", example="user@example.com", description="User's email"),
+ *             @OA\Property(property="password", type="string", example="password123", description="User's password")
+ *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Login successful",
+ *         description="Successful login",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Welcome, John Doe"),
- *             @OA\Property(property="access_token", type="string", example="1|abcd1234tokenexample"),
- *             @OA\Property(property="token_type", type="string", example="Bearer")
+ *             @OA\Property(property="message", type="string", example="Welcome, John Doe", description="Welcome message with user's full name"),
+ *             @OA\Property(property="access_token", type="string", example="1|abc123def456", description="Sanctum authentication token"),
+ *             @OA\Property(property="token_type", type="string", example="Bearer", description="Token type")
  *         )
  *     ),
  *     @OA\Response(
  *         response=422,
- *         description="Validation error or unverified email",
+ *         description="Validation or authentication error",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="The provided credentials are incorrect."),
- *             @OA\Property(property="message", type="string", example="Please verify your email address before logging in.")
+ *             @OA\Property(property="error", type="string", example="The provided credentials are incorrect.", description="Error message for invalid credentials or unverified email")
  *         )
  *     )
  * )
  */
-
 public function login(Request $request)
 {
     $request->validate([
@@ -148,29 +148,21 @@ public function login(Request $request)
         'password' => 'required|string',
     ]);
 
-    \Log::info('Login attempt for email: ' . $request->email);
-
     if (!Auth::attempt($request->only('email', 'password'))) {
-        \Log::info('Credentials incorrect for: ' . $request->email);
         return response()->json([
-            'message' => 'The provided credentials are incorrect.'
+            'error' => 'The provided credentials are incorrect.'
         ], 422);
     }
 
     $user = User::where('email', $request->email)->firstOrFail();
 
-    \Log::info('User found: ' . $user->email . ', Verified: ' . ($user->hasVerifiedEmail() ? 'Yes' : 'No'));
-
     if (!$user->hasVerifiedEmail()) {
-        \Log::info('Email not verified for: ' . $user->email);
         return response()->json([
-            'message' => 'Please verify your email address before logging in.'
+            'error' => 'Please verify your email address before logging in.'
         ], 422);
     }
 
     $token = $user->createToken('auth_token')->plainTextToken;
-
-    \Log::info('Token generated for: ' . $user->email);
 
     return response()->json([
         'message' => 'Welcome, ' . $user->full_name,
@@ -262,62 +254,60 @@ public function login(Request $request)
    
     
     /**
-     * @OA\Post(
-     *     path="/api/user/update",
-     *     summary="Update authenticated user's profile",
-     *     description="Updates the authenticated user's profile, including an optional profile picture upload.",
-     *     tags={"Authentication"},
-     *     security={{"sanctum": {}}},
-     *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="full_name", type="string", maxLength=255, example="John Doe", description="User's full name"),
-     *                 @OA\Property(property="email", type="string", format="email", maxLength=255, example="john.doe@example.com", description="User's email (must be unique)"),
-     *                 @OA\Property(property="phone_number", type="string", pattern="^\d{10}$", example="0123456789", description="User's 10-digit phone number (must be unique)"),
-     *                 @OA\Property(property="picture", type="string", format="binary", description="Profile picture file (JPEG/PNG/JPG, max 2MB)"),
-     *                 @OA\Property(property="address", type="string", maxLength=255, example="123 Main St", description="User's address", nullable=true),
-     *                 @OA\Property(property="city", type="string", maxLength=255, example="New York", description="User's city", nullable=true)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Profile updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="user", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
-     *                 @OA\Property(property="picture", type="string", example="/storage/pictures/user_1_123456789.jpg"),
-     *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
-     *                 @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
-     *                 @OA\Property(property="city", type="string", example="New York", nullable=true)
-     *             ),
-     *             @OA\Property(property="message", type="string", example="User updated successfully")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="full_name", type="array", @OA\Items(type="string", example="The full name must be a string.")),
-     *             @OA\Property(property="email", type="array", @OA\Items(type="string", example="The email has already been taken.")),
-     *             @OA\Property(property="picture", type="array", @OA\Items(type="string", example="The picture must be an image."))
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
-     *         )
-     *     )
-     * )
-     */
-    
-
+ * @OA\Post(
+ *     path="/api/user/update",
+ *     summary="Update authenticated user's profile",
+ *     description="Updates the authenticated user's profile, including an optional profile picture upload.",
+ *     tags={"Authentication"},
+ *     security={{"sanctum": {}}},
+ *     @OA\RequestBody(
+ *         required=false,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 @OA\Property(property="full_name", type="string", maxLength=255, example="John Doe", description="User's full name"),
+ *                 @OA\Property(property="email", type="string", format="email", maxLength=255, example="john.doe@example.com", description="User's email (must be unique)"),
+ *                 @OA\Property(property="phone_number", type="string", pattern="^\d{10}$", example="0123456789", description="User's 10-digit phone number (must be unique)"),
+ *                 @OA\Property(property="picture", type="string", format="binary", description="Profile picture file (JPEG/PNG/JPG, max 2MB)"),
+ *                 @OA\Property(property="address", type="string", maxLength=255, example="123 Main St", description="User's address", nullable=true),
+ *                 @OA\Property(property="city", type="string", maxLength=255, example="New York", description="User's city", nullable=true)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Profile updated successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="user", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+ *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
+ *                 @OA\Property(property="picture", type="string", example="/storage/pictures/user_1_123456789.jpg"),
+ *                 @OA\Property(property="phone_number", type="string", example="0123456789"),
+ *                 @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
+ *                 @OA\Property(property="city", type="string", example="New York", nullable=true)
+ *             ),
+ *             @OA\Property(property="message", type="string", example="User updated successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="full_name", type="array", @OA\Items(type="string", example="The full name must be a string.")),
+ *             @OA\Property(property="email", type="array", @OA\Items(type="string", example="The email has already been taken.")),
+ *             @OA\Property(property="picture", type="array", @OA\Items(type="string", example="The picture must be an image."))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Unauthenticated", description="Error message for unauthenticated access")
+ *         )
+ *     )
+ * )
+ */
      public function update(Request $request)
      {
          $user = $request->user();
