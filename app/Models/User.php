@@ -38,6 +38,30 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
     ];
+    public function suppliers()
+    {
+        return $this->hasMany(Supplier::class, 'user_id');
+    }
+
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'user_id');
+    }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class, 'organizer_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'user_id');
+    }
+
+    public function serviceProvider()
+    {
+        return $this->hasOne(ServiceProvider::class, 'user_id');
+    }
 
     /**
      * Get the attributes that should be cast.

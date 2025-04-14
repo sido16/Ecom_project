@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\SupplierController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -32,4 +34,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']); 
     Route::post('/user/update', [AuthController::class, 'update']);
     Route::put('/user/update-password', [AuthController::class, 'updatePassword']);
+});
+
+// routes/api.php
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('suppliers', [SupplierController::class, 'store']);
+    Route::put('suppliers/{id}', [SupplierController::class, 'update']);
+    Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
 });
