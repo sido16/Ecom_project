@@ -23,13 +23,51 @@ class SupplierController extends Controller
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 required={"user_id", "business_name", "description", "services", "domain_id", "type"},
-     *                 @OA\Property(property="user_id", type="integer", example=1),
-     *                 @OA\Property(property="business_name", type="string", maxLength=100, example="Tech Shop"),
-     *                 @OA\Property(property="description", type="string", example="Electronics and repair services"),
-     *                 @OA\Property(property="services", type="string", example="Repairs, Sales"),
-     *                 @OA\Property(property="domain_id", type="integer", example=1),
-     *                 @OA\Property(property="type", type="string", enum={"workshop", "importer", "merchant"}, example="workshop"),
-     *                 @OA\Property(property="picture", type="string", format="binary", nullable=true)
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="integer",
+     *                     description="ID of the user",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="business_name",
+     *                     type="string",
+     *                     maxLength=100,
+     *                     description="Name of the business",
+     *                     example="Tech Shop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     description="Description of the supplier",
+     *                     example="Electronics and repair services"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="services",
+     *                     type="string",
+     *                     description="Services offered by the supplier",
+     *                     example="Repairs, Sales"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain_id",
+     *                     type="integer",
+     *                     description="ID of the domain",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="type",
+     *                     type="string",
+     *                     enum={"workshop", "importer", "merchant"},
+     *                     description="Type of supplier",
+     *                     example="workshop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
+     *                     nullable=true
+     *                 )
      *             )
      *         )
      *     ),
@@ -37,15 +75,142 @@ class SupplierController extends Controller
      *         response=201,
      *         description="Supplier created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Supplier created successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="user_id", type="integer"),
-     *                 @OA\Property(property="business_name", type="string"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="services", type="string"),
-     *                 @OA\Property(property="domain_id", type="integer"),
-     *                 @OA\Property(property="picture", type="string", nullable=true)
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier created successfully"
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="business_name",
+     *                     type="string",
+     *                     example="Tech Shop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     example="Electronics and repair services"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="services",
+     *                     type="string",
+     *                     example="Repairs, Sales"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     nullable=true,
+     *                     example="pictures/supplier_1.jpg"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="created_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="updated_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="full_name",
+     *                         type="string",
+     *                         example="John Doe"
+     *                     ),
+     *                     @OA\Property(
+     *                         property="email",
+     *                         type="string",
+     *                         example="john@example.com"
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="name",
+     *                         type="string",
+     *                         example="Electronics"
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="workshop",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="importer",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="merchant",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 )
      *             )
      *         )
      *     ),
@@ -53,8 +218,16 @@ class SupplierController extends Controller
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Validation failed"
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"user_id": "The user_id field is required."}
+     *             )
      *         )
      *     )
      * )
@@ -111,18 +284,55 @@ class SupplierController extends Controller
      *         name="id",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(
+     *             type="integer",
+     *             description="Supplier ID",
+     *             example=1
+     *         )
      *     ),
      *     @OA\RequestBody(
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 @OA\Property(property="business_name", type="string", maxLength=100, example="Updated Shop"),
-     *                 @OA\Property(property="description", type="string", example="Updated description"),
-     *                 @OA\Property(property="services", type="string", example="Repairs, Delivery"),
-     *                 @OA\Property(property="domain_id", type="integer", example=1),
-     *                 @OA\Property(property="type", type="string", enum={"workshop", "importer", "merchant"}, example="merchant"),
-     *                 @OA\Property(property="picture", type="string", format="binary", nullable=true)
+     *                 @OA\Property(
+     *                     property="business_name",
+     *                     type="string",
+     *                     maxLength=100,
+     *                     description="Name of the business",
+     *                     example="Updated Shop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     description="Description of the supplier",
+     *                     example="Updated description"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="services",
+     *                     type="string",
+     *                     description="Services offered by the supplier",
+     *                     example="Repairs, Delivery"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain_id",
+     *                     type="integer",
+     *                     description="ID of the domain",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="type",
+     *                     type="string",
+     *                     enum={"workshop", "importer", "merchant"},
+     *                     description="Type of supplier",
+     *                     example="merchant"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
+     *                     nullable=true
+     *                 )
      *             )
      *         )
      *     ),
@@ -130,15 +340,62 @@ class SupplierController extends Controller
      *         response=200,
      *         description="Supplier updated successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Supplier updated successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="user_id", type="integer"),
-     *                 @OA\Property(property="business_name", type="string"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="services", type="string"),
-     *                 @OA\Property(property="domain_id", type="integer"),
-     *                 @OA\Property(property="picture", type="string", nullable=true)
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier updated successfully"
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="business_name",
+     *                     type="string",
+     *                     example="Updated Shop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     example="Updated description"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="services",
+     *                     type="string",
+     *                     example="Repairs, Delivery"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     nullable=true,
+     *                     example="pictures/supplier_1_updated.jpg"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="created_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="updated_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:01:00Z"
+     *                 )
      *             )
      *         )
      *     ),
@@ -146,15 +403,27 @@ class SupplierController extends Controller
      *         response=404,
      *         description="Supplier not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Supplier not found")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier not found"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Validation failed"
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"business_name": "The business_name must be a string."}
+     *             )
      *         )
      *     )
      * )
@@ -169,7 +438,7 @@ class SupplierController extends Controller
             'services' => 'sometimes|string',
             'domain_id' => 'sometimes|exists:domains,id',
             'type' => 'sometimes|in:workshop,importer,merchant',
-            'picture' => 'nullable|image|max:2048',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -218,20 +487,32 @@ class SupplierController extends Controller
      *         name="id",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(
+     *             type="integer",
+     *             description="Supplier ID",
+     *             example=1
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Supplier deleted successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Supplier deleted successfully")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier deleted successfully"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Supplier not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Supplier not found")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier not found"
+     *             )
      *         )
      *     )
      * )

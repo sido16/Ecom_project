@@ -716,27 +716,33 @@
                                 ],
                                 "properties": {
                                     "user_id": {
+                                        "description": "ID of the user",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "business_name": {
+                                        "description": "Name of the business",
                                         "type": "string",
                                         "maxLength": 100,
                                         "example": "Tech Shop"
                                     },
                                     "description": {
+                                        "description": "Description of the supplier",
                                         "type": "string",
                                         "example": "Electronics and repair services"
                                     },
                                     "services": {
+                                        "description": "Services offered by the supplier",
                                         "type": "string",
                                         "example": "Repairs, Sales"
                                     },
                                     "domain_id": {
+                                        "description": "ID of the domain",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "type": {
+                                        "description": "Type of supplier",
                                         "type": "string",
                                         "enum": [
                                             "workshop",
@@ -746,6 +752,7 @@
                                         "example": "workshop"
                                     },
                                     "picture": {
+                                        "description": "Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
                                         "type": "string",
                                         "format": "binary",
                                         "nullable": true
@@ -770,25 +777,116 @@
                                         "data": {
                                             "properties": {
                                                 "id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "user_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "business_name": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Tech Shop"
                                                 },
                                                 "description": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Electronics and repair services"
                                                 },
                                                 "services": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Repairs, Sales"
                                                 },
                                                 "domain_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "picture": {
                                                     "type": "string",
+                                                    "example": "pictures/supplier_1.jpg",
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "john@example.com"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "domain": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Electronics"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "workshop": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "importer": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "merchant": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
                                                     "nullable": true
                                                 }
                                             },
@@ -811,7 +909,10 @@
                                             "example": "Validation failed"
                                         },
                                         "errors": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "example": {
+                                                "user_id": "The user_id field is required."
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -840,7 +941,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "description": "Supplier ID",
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
@@ -850,23 +953,28 @@
                             "schema": {
                                 "properties": {
                                     "business_name": {
+                                        "description": "Name of the business",
                                         "type": "string",
                                         "maxLength": 100,
                                         "example": "Updated Shop"
                                     },
                                     "description": {
+                                        "description": "Description of the supplier",
                                         "type": "string",
                                         "example": "Updated description"
                                     },
                                     "services": {
+                                        "description": "Services offered by the supplier",
                                         "type": "string",
                                         "example": "Repairs, Delivery"
                                     },
                                     "domain_id": {
+                                        "description": "ID of the domain",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "type": {
+                                        "description": "Type of supplier",
                                         "type": "string",
                                         "enum": [
                                             "workshop",
@@ -876,6 +984,7 @@
                                         "example": "merchant"
                                     },
                                     "picture": {
+                                        "description": "Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
                                         "type": "string",
                                         "format": "binary",
                                         "nullable": true
@@ -900,26 +1009,43 @@
                                         "data": {
                                             "properties": {
                                                 "id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "user_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "business_name": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Updated Shop"
                                                 },
                                                 "description": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Updated description"
                                                 },
                                                 "services": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Repairs, Delivery"
                                                 },
                                                 "domain_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "picture": {
                                                     "type": "string",
+                                                    "example": "pictures/supplier_1_updated.jpg",
                                                     "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:01:00Z"
                                                 }
                                             },
                                             "type": "object"
@@ -957,7 +1083,10 @@
                                             "example": "Validation failed"
                                         },
                                         "errors": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "example": {
+                                                "business_name": "The business_name must be a string."
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -984,7 +1113,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "description": "Supplier ID",
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],

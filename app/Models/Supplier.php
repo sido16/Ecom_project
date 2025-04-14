@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Supplier extends Model
 {
-    protected $fillable = ['user_id', 'business_name', 'description','picture', 'services', 'domain_id'];
+    protected $fillable = ['user_id', 'business_name', 'description', 'services', 'domain_id', 'picture'];
 
     public function user()
     {
@@ -25,16 +25,16 @@ class Supplier extends Model
 
     public function workshop()
     {
-        return $this->hasOne(Workshop::class, 'supplier_id', 'id');
+        return $this->hasOne(Workshop::class, 'supplier_id');
     }
 
     public function importer()
     {
-        return $this->hasOne(Importer::class, 'supplier_id', 'id');
+        return $this->hasOne(Importer::class, 'supplier_id');
     }
 
     public function merchant()
     {
-        return $this->hasOne(Merchant::class, 'supplier_id', 'id');
+        return $this->hasOne(Merchant::class, 'supplier_id');
     }
 }

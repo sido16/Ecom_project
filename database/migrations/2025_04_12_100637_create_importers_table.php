@@ -1,3 +1,4 @@
+// database/migrations/YYYY_MM_DD_HHMMSS_create_importers_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -9,17 +10,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('importers', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->primary();
-            $table->foreign('supplier_id')
-                  ->references('id')
-                  ->on('suppliers')
-                  ->onDelete('cascade');
+            $table->id();
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     public function down(): void
-        {
-            Schema::dropIfExists('importers');
-        }
-    };
+    {
+        Schema::dropIfExists('importers');
+    }
+};

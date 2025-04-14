@@ -9,11 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('work_shops', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->primary();
-            $table->foreign('supplier_id')
-                  ->references('id')
-                  ->on('suppliers')
-                  ->onDelete('cascade');
+            $table->id();
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->timestamps();
         });
     }
