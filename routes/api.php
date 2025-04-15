@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ProductController;
+
 
 
 /*
@@ -38,8 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // routes/api.php
 
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('suppliers', [SupplierController::class, 'store']);
     Route::put('suppliers/{id}', [SupplierController::class, 'update']);
     Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
+    Route::post('products', [ProductController::class, 'store']);
+    Route::post('products/{id}', [ProductController::class, 'update']);
+    Route::delete('products/{id}', [ProductController::class, 'destroy']);
 });
