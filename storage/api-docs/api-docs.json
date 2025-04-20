@@ -694,6 +694,49 @@
                 }
             }
         },
+        "/api/domains": {
+            "get": {
+                "tags": [
+                    "Domains"
+                ],
+                "summary": "Get all domains",
+                "operationId": "8eead5cc470eaadf40aeb9f17367451f",
+                "responses": {
+                    "200": {
+                        "description": "Domains retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Domains retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Furniture"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/products": {
             "post": {
                 "tags": [
@@ -1154,85 +1197,35 @@
                 ]
             }
         },
-        "/api/suppliers": {
-            "post": {
+        "/api/suppliers/{id}": {
+            "get": {
                 "tags": [
                     "Suppliers"
                 ],
-                "summary": "Create a new supplier",
-                "operationId": "c1ee06af9e1f197a4aa49c1dd74c981c",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "user_id",
-                                    "business_name",
-                                    "description",
-                                    "services",
-                                    "domain_id",
-                                    "type"
-                                ],
-                                "properties": {
-                                    "user_id": {
-                                        "description": "ID of the user",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "business_name": {
-                                        "description": "Name of the business",
-                                        "type": "string",
-                                        "maxLength": 100,
-                                        "example": "Tech Shop"
-                                    },
-                                    "description": {
-                                        "description": "Description of the supplier",
-                                        "type": "string",
-                                        "example": "Electronics and repair services"
-                                    },
-                                    "services": {
-                                        "description": "Services offered by the supplier",
-                                        "type": "string",
-                                        "example": "Repairs, Sales"
-                                    },
-                                    "domain_id": {
-                                        "description": "ID of the domain",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "type": {
-                                        "description": "Type of supplier",
-                                        "type": "string",
-                                        "enum": [
-                                            "workshop",
-                                            "importer",
-                                            "merchant"
-                                        ],
-                                        "example": "workshop"
-                                    },
-                                    "picture": {
-                                        "description": "Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
-                                        "type": "string",
-                                        "format": "binary",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
+                "summary": "Get a supplier by ID",
+                "operationId": "6be0f2389de5f1d79708c391d4cb0156",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "description": "Supplier ID",
+                            "type": "integer",
+                            "example": 1
                         }
                     }
-                },
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Supplier created successfully",
+                    "200": {
+                        "description": "Supplier retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Supplier created successfully"
+                                            "example": "Supplier retrieved successfully"
                                         },
                                         "data": {
                                             "properties": {
@@ -1248,22 +1241,22 @@
                                                     "type": "string",
                                                     "example": "Tech Shop"
                                                 },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "123 Main St, City"
+                                                },
                                                 "description": {
                                                     "type": "string",
                                                     "example": "Electronics and repair services"
-                                                },
-                                                "services": {
-                                                    "type": "string",
-                                                    "example": "Repairs, Sales"
-                                                },
-                                                "domain_id": {
-                                                    "type": "integer",
-                                                    "example": 1
                                                 },
                                                 "picture": {
                                                     "type": "string",
                                                     "example": "pictures/supplier_1.jpg",
                                                     "nullable": true
+                                                },
+                                                "domain_id": {
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "created_at": {
                                                     "type": "string",
@@ -1358,21 +1351,15 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "Validation error",
+                    "404": {
+                        "description": "Supplier not found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Validation failed"
-                                        },
-                                        "errors": {
-                                            "type": "object",
-                                            "example": {
-                                                "user_id": "The user_id field is required."
-                                            }
+                                            "example": "Supplier not found"
                                         }
                                     },
                                     "type": "object"
@@ -1386,9 +1373,7 @@
                         "sanctum": []
                     }
                 ]
-            }
-        },
-        "/api/suppliers/{id}": {
+            },
             "post": {
                 "tags": [
                     "Suppliers"
@@ -1423,10 +1408,11 @@
                                         "type": "string",
                                         "example": "Updated description"
                                     },
-                                    "services": {
-                                        "description": "Services offered by the supplier",
+                                    "address": {
+                                        "description": "Physical address of the supplier",
                                         "type": "string",
-                                        "example": "Repairs, Delivery"
+                                        "maxLength": 255,
+                                        "example": "456 Oak Ave, City"
                                     },
                                     "domain_id": {
                                         "description": "ID of the domain",
@@ -1484,9 +1470,9 @@
                                                     "type": "string",
                                                     "example": "Updated description"
                                                 },
-                                                "services": {
+                                                "address": {
                                                     "type": "string",
-                                                    "example": "Repairs, Delivery"
+                                                    "example": "456 Oak Ave, City"
                                                 },
                                                 "domain_id": {
                                                     "type": "integer",
@@ -1619,12 +1605,251 @@
                     }
                 ]
             }
+        },
+        "/api/suppliers": {
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Create a new supplier",
+                "operationId": "c1ee06af9e1f197a4aa49c1dd74c981c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "business_name",
+                                    "description",
+                                    "address",
+                                    "domain_id",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID of the user",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "business_name": {
+                                        "description": "Name of the business",
+                                        "type": "string",
+                                        "maxLength": 100,
+                                        "example": "Tech Shop"
+                                    },
+                                    "description": {
+                                        "description": "Description of the supplier",
+                                        "type": "string",
+                                        "example": "Electronics and repair services"
+                                    },
+                                    "address": {
+                                        "description": "Physical address of the supplier",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "123 Main St, City"
+                                    },
+                                    "domain_id": {
+                                        "description": "ID of the domain",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "type": {
+                                        "description": "Type of supplier",
+                                        "type": "string",
+                                        "enum": [
+                                            "workshop",
+                                            "importer",
+                                            "merchant"
+                                        ],
+                                        "example": "workshop"
+                                    },
+                                    "picture": {
+                                        "description": "Image file for supplier profile (JPEG, PNG, JPG, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Supplier created successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "business_name": {
+                                                    "type": "string",
+                                                    "example": "Tech Shop"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Electronics and repair services"
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "123 Main St, City"
+                                                },
+                                                "domain_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "picture": {
+                                                    "type": "string",
+                                                    "example": "pictures/supplier_1.jpg",
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "john@example.com"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "domain": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Electronics"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "workshop": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "importer": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "merchant": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "supplier_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "user_id": "The user_id field is required."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "tags": [
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Domains",
+            "description": "Domains"
         },
         {
             "name": "Products",

@@ -2,24 +2,46 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['supplier_id', 'product_name', 'description', 'category_id', 'price', 'quantity', 'minimum_quantity'];
+    use HasFactory;
+
+    protected $fillable = [
+        'supplier_id',
+        'category_id',
+        'name',
+        'price',
+        'picture',
+        'description',
+        'visibility',
+        'quantity',
+        'minimum_quantity',
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'visibility' => 'string',
+        'quantity' => 'integer',
+        'minimum_quantity' => 'integer',
+    ];
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
+        return $this->belongsTo(Supplier::class);
     }
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class);
     }
 
-    public function pictures()
+    public function orders()
     {
-        return $this->hasMany(ProductPicture::class, 'product_id');
+        return $this->belongsToMany(Order::class, 'order_product')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
     }
 }

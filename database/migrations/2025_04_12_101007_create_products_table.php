@@ -1,4 +1,3 @@
-// database/migrations/YYYY_MM_DD_HHMMSS_create_products_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10,14 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
-            $table->string('product_name', 100);
+            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');            $table->string('name');
+            $table->decimal('price', 10, 2)->nullable();
+            $table->string('picture', 255)->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
-            $table->decimal('price', 8, 2);
-            $table->integer('quantity');
-            $table->integer('minimum_quantity');
+            $table->enum('visibility', ['public', 'private']);
+            $table->unsignedInteger('quantity')->nullable();
+            $table->unsignedInteger('minimum_quantity')->nullable();
             $table->timestamps();
         });
     }

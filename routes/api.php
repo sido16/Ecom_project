@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DomainController;
 
 
 
@@ -44,9 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('suppliers', [SupplierController::class, 'store']);
+    Route::get('suppliers/{id}', [SupplierController::class, 'show']);
     Route::put('suppliers/{id}', [SupplierController::class, 'update']);
     Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
     Route::post('products', [ProductController::class, 'store']);
     Route::post('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
+    Route::get('/domains', [DomainController::class, 'index']);
 });

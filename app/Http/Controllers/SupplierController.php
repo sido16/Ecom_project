@@ -12,6 +12,188 @@ use Illuminate\Support\Facades\Validator;
 class SupplierController extends Controller
 {
     /**
+     * @OA\Get(
+     *     path="/api/suppliers/{id}",
+     *     summary="Get a supplier by ID",
+     *     tags={"Suppliers"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             description="Supplier ID",
+     *             example=1
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Supplier retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier retrieved successfully"
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="business_name",
+     *                     type="string",
+     *                     example="Tech Shop"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="address",
+     *                     type="string",
+     *                     example="123 Main St, City"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     example="Electronics and repair services"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     nullable=true,
+     *                     example="pictures/supplier_1.jpg"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain_id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="created_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="updated_at",
+     *                     type="string",
+     *                     format="date-time",
+     *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="full_name",
+     *                         type="string",
+     *                         example="John Doe"
+     *                     ),
+     *                     @OA\Property(
+     *                         property="email",
+     *                         type="string",
+     *                         example="john@example.com"
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="domain",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="name",
+     *                         type="string",
+     *                         example="Electronics"
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="workshop",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="importer",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="merchant",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     @OA\Property(
+     *                         property="supplier_id",
+     *                         type="integer",
+     *                         example=1
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Supplier not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Supplier not found"
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function show($id)
+    {
+        $supplier = Supplier::with(['user', 'domain', 'workshop', 'importer', 'merchant'])->findOrFail($id);
+
+        return response()->json([
+            'message' => 'Supplier retrieved successfully',
+            'data' => $supplier
+        ], 200);
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/suppliers",
      *     summary="Create a new supplier",
@@ -22,7 +204,7 @@ class SupplierController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"user_id", "business_name", "description", "services", "domain_id", "type"},
+     *                 required={"user_id", "business_name", "description", "address", "domain_id", "type"},
      *                 @OA\Property(
      *                     property="user_id",
      *                     type="integer",
@@ -43,10 +225,11 @@ class SupplierController extends Controller
      *                     example="Electronics and repair services"
      *                 ),
      *                 @OA\Property(
-     *                     property="services",
+     *                     property="address",
      *                     type="string",
-     *                     description="Services offered by the supplier",
-     *                     example="Repairs, Sales"
+     *                     maxLength=255,
+     *                     description="Physical address of the supplier",
+     *                     example="123 Main St, City"
      *                 ),
      *                 @OA\Property(
      *                     property="domain_id",
@@ -104,9 +287,9 @@ class SupplierController extends Controller
      *                     example="Electronics and repair services"
      *                 ),
      *                 @OA\Property(
-     *                     property="services",
+     *                     property="address",
      *                     type="string",
-     *                     example="Repairs, Sales"
+     *                     example="123 Main St, City"
      *                 ),
      *                 @OA\Property(
      *                     property="domain_id",
@@ -238,7 +421,7 @@ class SupplierController extends Controller
             'user_id' => 'required|exists:users,id',
             'business_name' => 'required|string|max:100',
             'description' => 'required|string',
-            'services' => 'required|string',
+            'address' => 'required|string|max:255',
             'domain_id' => 'required|exists:domains,id',
             'type' => 'required|in:workshop,importer,merchant',
             'picture' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
@@ -251,7 +434,7 @@ class SupplierController extends Controller
             ], 422);
         }
 
-        $data = $request->only(['user_id', 'business_name', 'description', 'services', 'domain_id']);
+        $data = $request->only(['user_id', 'business_name', 'description', 'address', 'domain_id']);
 
         if ($request->hasFile('picture')) {
             $data['picture'] = $request->file('picture')->store('pictures', 'public');
@@ -308,10 +491,11 @@ class SupplierController extends Controller
      *                     example="Updated description"
      *                 ),
      *                 @OA\Property(
-     *                     property="services",
+     *                     property="address",
      *                     type="string",
-     *                     description="Services offered by the supplier",
-     *                     example="Repairs, Delivery"
+     *                     maxLength=255,
+     *                     description="Physical address of the supplier",
+     *                     example="456 Oak Ave, City"
      *                 ),
      *                 @OA\Property(
      *                     property="domain_id",
@@ -369,9 +553,9 @@ class SupplierController extends Controller
      *                     example="Updated description"
      *                 ),
      *                 @OA\Property(
-     *                     property="services",
+     *                     property="address",
      *                     type="string",
-     *                     example="Repairs, Delivery"
+     *                     example="456 Oak Ave, City"
      *                 ),
      *                 @OA\Property(
      *                     property="domain_id",
@@ -435,7 +619,7 @@ class SupplierController extends Controller
         $validator = Validator::make($request->all(), [
             'business_name' => 'sometimes|string|max:100',
             'description' => 'sometimes|string',
-            'services' => 'sometimes|string',
+            'address' => 'sometimes|string|max:255',
             'domain_id' => 'sometimes|exists:domains,id',
             'type' => 'sometimes|in:workshop,importer,merchant',
             'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -448,7 +632,7 @@ class SupplierController extends Controller
             ], 422);
         }
 
-        $data = $request->only(['business_name', 'description', 'services', 'domain_id']);
+        $data = $request->only(['business_name', 'description', 'address', 'domain_id']);
 
         if ($request->hasFile('picture')) {
             $data['picture'] = $request->file('picture')->store('pictures', 'public');
