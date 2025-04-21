@@ -751,10 +751,11 @@
                             "schema": {
                                 "required": [
                                     "supplier_id",
-                                    "product_name",
+                                    "name",
                                     "price",
                                     "quantity",
-                                    "minimum_quantity"
+                                    "minimum_quantity",
+                                    "visibility"
                                 ],
                                 "properties": {
                                     "supplier_id": {
@@ -762,10 +763,10 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "product_name": {
+                                    "name": {
                                         "description": "Name of the product",
                                         "type": "string",
-                                        "maxLength": 100,
+                                        "maxLength": 255,
                                         "example": "Smartphone X"
                                     },
                                     "description": {
@@ -796,13 +797,19 @@
                                         "type": "integer",
                                         "example": 10
                                     },
-                                    "pictures[]": {
-                                        "description": "Array of product images (JPEG, PNG, JPG, max 2MB each)",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "format": "binary"
-                                        },
+                                    "visibility": {
+                                        "description": "Visibility of the product",
+                                        "type": "string",
+                                        "enum": [
+                                            "public",
+                                            "private"
+                                        ],
+                                        "example": "public"
+                                    },
+                                    "picture": {
+                                        "description": "Product image (JPEG, PNG, JPG, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
                                         "nullable": true
                                     }
                                 },
@@ -832,7 +839,7 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "product_name": {
+                                                "name": {
                                                     "type": "string",
                                                     "example": "Smartphone X"
                                                 },
@@ -859,6 +866,15 @@
                                                     "type": "integer",
                                                     "example": 10
                                                 },
+                                                "visibility": {
+                                                    "type": "string",
+                                                    "example": "public"
+                                                },
+                                                "picture": {
+                                                    "type": "string",
+                                                    "example": "product_pictures/image1.jpg",
+                                                    "nullable": true
+                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
@@ -868,26 +884,6 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-04-14T12:00:00Z"
-                                                },
-                                                "pictures": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "product_id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "picture": {
-                                                                "type": "string",
-                                                                "example": "product_pictures/image1.jpg"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -957,10 +953,10 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "product_name": {
+                                    "name": {
                                         "description": "Name of the product",
                                         "type": "string",
-                                        "maxLength": 100,
+                                        "maxLength": 255,
                                         "example": "Smartphone X"
                                     },
                                     "description": {
@@ -991,13 +987,19 @@
                                         "type": "integer",
                                         "example": 5
                                     },
-                                    "pictures[]": {
-                                        "description": "Array of product images (JPEG, PNG, JPG, max 2MB each)",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "format": "binary"
-                                        },
+                                    "visibility": {
+                                        "description": "Visibility of the product",
+                                        "type": "string",
+                                        "enum": [
+                                            "public",
+                                            "private"
+                                        ],
+                                        "example": "public"
+                                    },
+                                    "picture": {
+                                        "description": "Product image (JPEG, PNG, JPG, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
                                         "nullable": true
                                     }
                                 },
@@ -1027,7 +1029,7 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "product_name": {
+                                                "name": {
                                                     "type": "string",
                                                     "example": "Smartphone X"
                                                 },
@@ -1054,6 +1056,15 @@
                                                     "type": "integer",
                                                     "example": 5
                                                 },
+                                                "visibility": {
+                                                    "type": "string",
+                                                    "example": "public"
+                                                },
+                                                "picture": {
+                                                    "type": "string",
+                                                    "example": "product_pictures/image1.jpg",
+                                                    "nullable": true
+                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
@@ -1063,26 +1074,6 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-04-14T12:01:00Z"
-                                                },
-                                                "pictures": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "product_id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "picture": {
-                                                                "type": "string",
-                                                                "example": "product_pictures/image1.jpg"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1604,6 +1595,108 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/suppliers/by-user/{userId}": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Get Suppliers by User ID",
+                "description": "Retrieves all suppliers associated with a specific user by their user ID, including their associated domain data.",
+                "operationId": "getSuppliersByUserId",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "The ID of the user whose suppliers are to be retrieved",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppliers found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "user_id": {
+                                                "type": "integer"
+                                            },
+                                            "business_name": {
+                                                "type": "string"
+                                            },
+                                            "address": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "picture": {
+                                                "type": "string"
+                                            },
+                                            "domain_id": {
+                                                "type": "integer"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "domain": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No suppliers found for the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No suppliers found for this user"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/suppliers": {

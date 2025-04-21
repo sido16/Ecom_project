@@ -9,11 +9,14 @@ class OrderProduct extends Model
 {
     use HasFactory;
 
-    protected $table = 'order_product';
+    protected $primaryKey = ['order_id', 'product_id'];
+
+    public $incrementing = false;
 
     protected $fillable = [
         'order_id',
         'product_id',
+        'supplier_id',
         'quantity',
         'unit_price',
     ];
@@ -31,5 +34,10 @@ class OrderProduct extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

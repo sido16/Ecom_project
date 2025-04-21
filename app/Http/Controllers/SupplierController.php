@@ -194,6 +194,67 @@ class SupplierController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/suppliers/by-user/{userId}",
+     *     summary="Get Suppliers by User ID",
+     *     description="Retrieves all suppliers associated with a specific user by their user ID, including their associated domain data.",
+     *     operationId="getSuppliersByUserId",
+     *     tags={"Suppliers"},
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the user whose suppliers are to be retrieved",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Suppliers found",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="user_id", type="integer"),
+     *                 @OA\Property(property="business_name", type="string"),
+     *                 @OA\Property(property="address", type="string"),
+     *                 @OA\Property(property="description", type="string"),
+     *                 @OA\Property(property="picture", type="string"),
+     *                 @OA\Property(property="domain_id", type="integer"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(
+     *                     property="domain",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No suppliers found for the user",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No suppliers found for this user")
+     *         )
+     *     )
+     * )
+     */
+    public function getSuppliersByUserId($userId)
+    {
+        $suppliers = Supplier::where('user_id', $userId)->with('domain')->get();
+
+        if ($suppliers->isEmpty()) {
+            return response()->json(['message' => 'No suppliers found for this user'], 404);
+        }
+
+        return response()->json($suppliers, 200);
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/suppliers",
      *     summary="Create a new supplier",

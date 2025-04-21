@@ -11,16 +11,17 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
-        'supplier_id',
         'status',
         'total_amount',
         'order_date',
+        'is_validated',
     ];
 
     protected $casts = [
         'status' => 'string',
         'total_amount' => 'decimal:2',
         'order_date' => 'datetime',
+        'is_validated' => 'boolean',
     ];
 
     public function user()
@@ -28,15 +29,8 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function supplier()
+    public function orderProducts()
     {
-        return $this->belongsTo(Supplier::class);
-    }
-
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'order_product')
-                    ->withPivot('quantity', 'unit_price')
-                    ->withTimestamps();
+        return $this->hasMany(OrderProduct::class);
     }
 }
