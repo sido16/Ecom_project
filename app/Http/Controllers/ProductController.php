@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\ProductPicture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,7 +19,7 @@ class ProductController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"supplier_id", "product_name", "price", "quantity", "minimum_quantity"},
+     *                 required={"supplier_id", "name", "price", "quantity", "minimum_quantity", "visibility"},
      *                 @OA\Property(
      *                     property="supplier_id",
      *                     type="integer",
@@ -28,9 +27,9 @@ class ProductController extends Controller
      *                     example=1
      *                 ),
      *                 @OA\Property(
-     *                     property="product_name",
+     *                     property="name",
      *                     type="string",
-     *                     maxLength=100,
+     *                     maxLength=255,
      *                     description="Name of the product",
      *                     example="Smartphone X"
      *                 ),
@@ -68,13 +67,17 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
-     *                     property="pictures[]",
-     *                     type="array",
-     *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
-     *                     @OA\Items(
-     *                         type="string",
-     *                         format="binary"
-     *                     ),
+     *                     property="visibility",
+     *                     type="string",
+     *                     enum={"public", "private"},
+     *                     description="Visibility of the product",
+     *                     example="public"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Product image (JPEG, PNG, JPG, max 2MB)",
      *                     nullable=true
      *                 )
      *             )
@@ -103,7 +106,7 @@ class ProductController extends Controller
      *                     example=1
      *                 ),
      *                 @OA\Property(
-     *                     property="product_name",
+     *                     property="name",
      *                     type="string",
      *                     example="Smartphone X"
      *                 ),
@@ -136,6 +139,17 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
+     *                     property="visibility",
+     *                     type="string",
+     *                     example="public"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     example="product_pictures/image1.jpg",
+     *                     nullable=true
+     *                 ),
+     *                 @OA\Property(
      *                     property="created_at",
      *                     type="string",
      *                     format="date-time",
@@ -146,28 +160,6 @@ class ProductController extends Controller
      *                     type="string",
      *                     format="date-time",
      *                     example="2025-04-14T12:00:00Z"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="pictures",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(
-     *                             property="id",
-     *                             type="integer",
-     *                             example=1
-     *                         ),
-     *                         @OA\Property(
-     *                             property="product_id",
-     *                             type="integer",
-     *                             example=1
-     *                         ),
-     *                         @OA\Property(
-     *                             property="picture",
-     *                             type="string",
-     *                             example="product_pictures/image1.jpg"
-     *                         )
-     *                     )
      *                 )
      *             )
      *         )
@@ -194,13 +186,14 @@ class ProductController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'required|exists:suppliers,id',
-            'product_name' => 'required|string|max:100',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
             'minimum_quantity' => 'required|integer|min:0',
-            'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'visibility' => 'required|in:public,private',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -210,30 +203,26 @@ class ProductController extends Controller
             ], 422);
         }
 
-        $product = Product::create($request->only([
+        $data = $request->only([
             'supplier_id',
-            'product_name',
+            'name',
             'description',
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity'
-        ]));
+            'minimum_quantity',
+            'visibility'
+        ]);
 
-        if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
-            foreach ($request->file('pictures') as $picture) {
-                if ($picture->isValid()) {
-                    ProductPicture::create([
-                        'product_id' => $product->id,
-                        'picture' => $picture->store('product_pictures', 'public')
-                    ]);
-                }
-            }
+        if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
+            $data['picture'] = $request->file('picture')->store('product_pictures', 'public');
         }
+
+        $product = Product::create($data);
 
         return response()->json([
             'message' => 'Product created successfully',
-            'data' => $product->load('pictures')
+            'data' => $product
         ], 201);
     }
 
@@ -264,9 +253,9 @@ class ProductController extends Controller
      *                     example=1
      *                 ),
      *                 @OA\Property(
-     *                     property="product_name",
+     *                     property="name",
      *                     type="string",
-     *                     maxLength=100,
+     *                     maxLength=255,
      *                     description="Name of the product",
      *                     example="Smartphone X"
      *                 ),
@@ -304,13 +293,17 @@ class ProductController extends Controller
      *                     example=5
      *                 ),
      *                 @OA\Property(
-     *                     property="pictures[]",
-     *                     type="array",
-     *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
-     *                     @OA\Items(
-     *                         type="string",
-     *                         format="binary"
-     *                     ),
+     *                     property="visibility",
+     *                     type="string",
+     *                     enum={"public", "private"},
+     *                     description="Visibility of the product",
+     *                     example="public"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Product image (JPEG, PNG, JPG, max 2MB)",
      *                     nullable=true
      *                 )
      *             )
@@ -339,7 +332,7 @@ class ProductController extends Controller
      *                     example=1
      *                 ),
      *                 @OA\Property(
-     *                     property="product_name",
+     *                     property="name",
      *                     type="string",
      *                     example="Smartphone X"
      *                 ),
@@ -372,6 +365,17 @@ class ProductController extends Controller
      *                     example=5
      *                 ),
      *                 @OA\Property(
+     *                     property="visibility",
+     *                     type="string",
+     *                     example="public"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="picture",
+     *                     type="string",
+     *                     example="product_pictures/image1.jpg",
+     *                     nullable=true
+     *                 ),
+     *                 @OA\Property(
      *                     property="created_at",
      *                     type="string",
      *                     format="date-time",
@@ -382,28 +386,6 @@ class ProductController extends Controller
      *                     type="string",
      *                     format="date-time",
      *                     example="2025-04-14T12:01:00Z"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="pictures",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(
-     *                             property="id",
-     *                             type="integer",
-     *                             example=1
-     *                         ),
-     *                         @OA\Property(
-     *                             property="product_id",
-     *                             type="integer",
-     *                             example=1
-     *                         ),
-     *                         @OA\Property(
-     *                             property="picture",
-     *                             type="string",
-     *                             example="product_pictures/image1.jpg"
-     *                         )
-     *                     )
      *                 )
      *             )
      *         )
@@ -443,13 +425,14 @@ class ProductController extends Controller
 
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'sometimes|exists:suppliers,id',
-            'product_name' => 'sometimes|string|max:100',
+            'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'price' => 'sometimes|numeric|min:0',
             'quantity' => 'sometimes|integer|min:0',
             'minimum_quantity' => 'sometimes|integer|min:0',
-            'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'visibility' => 'sometimes|in:public,private',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -461,31 +444,24 @@ class ProductController extends Controller
 
         $data = $request->only([
             'supplier_id',
-            'product_name',
+            'name',
             'description',
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity'
+            'minimum_quantity',
+            'visibility'
         ]);
+
+        if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
+            $data['picture'] = $request->file('picture')->store('product_pictures', 'public');
+        }
 
         $product->update($data);
 
-        if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
-            ProductPicture::where('product_id', $product->id)->delete();
-            foreach ($request->file('pictures') as $picture) {
-                if ($picture->isValid()) {
-                    ProductPicture::create([
-                        'product_id' => $product->id,
-                        'picture' => $picture->store('product_pictures', 'public')
-                    ]);
-                }
-            }
-        }
-
         return response()->json([
             'message' => 'Product updated successfully',
-            'data' => $product->load('pictures')
+            'data' => $product
         ], 200);
     }
 
@@ -497,7 +473,7 @@ class ProductController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
      *         name="id",
-     *         in="path",
+         *         in="path",
      *         required=true,
      *         @OA\Schema(
      *             type="integer",
@@ -537,15 +513,3 @@ class ProductController extends Controller
         ], 200);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
