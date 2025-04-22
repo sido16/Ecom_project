@@ -14,158 +14,76 @@ class SupplierController extends Controller
     /**
      * @OA\Get(
      *     path="/api/suppliers/{id}",
-     *     summary="Get a supplier by ID",
+     *     summary="Get Supplier by ID",
+     *     description="Retrieves a supplier by its ID, including associated user, domain, and type (workshop, importer, or merchant).",
+     *     operationId="showSupplier",
      *     tags={"Suppliers"},
-     *     security={{"sanctum": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(
-     *             type="integer",
-     *             description="Supplier ID",
-     *             example=1
-     *         )
+     *         description="The ID of the supplier to retrieve",
+     *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Supplier retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Supplier retrieved successfully"
-     *             ),
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Supplier retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(
-     *                     property="id",
-     *                     type="integer",
-     *                     example=1
-     *                 ),
-     *                 @OA\Property(
-     *                     property="user_id",
-     *                     type="integer",
-     *                     example=1
-     *                 ),
-     *                 @OA\Property(
-     *                     property="business_name",
-     *                     type="string",
-     *                     example="Tech Shop"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="address",
-     *                     type="string",
-     *                     example="123 Main St, City"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="description",
-     *                     type="string",
-     *                     example="Electronics and repair services"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="picture",
-     *                     type="string",
-     *                     nullable=true,
-     *                     example="pictures/supplier_1.jpg"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="domain_id",
-     *                     type="integer",
-     *                     example=1
-     *                 ),
-     *                 @OA\Property(
-     *                     property="created_at",
-     *                     type="string",
-     *                     format="date-time",
-     *                     example="2025-04-14T12:00:00Z"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="updated_at",
-     *                     type="string",
-     *                     format="date-time",
-     *                     example="2025-04-14T12:00:00Z"
-     *                 ),
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="user_id", type="integer"),
+     *                 @OA\Property(property="business_name", type="string"),
+     *                 @OA\Property(property="address", type="string"),
+     *                 @OA\Property(property="description", type="string"),
+     *                 @OA\Property(property="picture", type="string"),
+     *                 @OA\Property(property="domain_id", type="integer"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
      *                 @OA\Property(
      *                     property="user",
      *                     type="object",
-     *                     nullable=true,
-     *                     @OA\Property(
-     *                         property="id",
-     *                         type="integer",
-     *                         example=1
-     *                     ),
-     *                     @OA\Property(
-     *                         property="full_name",
-     *                         type="string",
-     *                         example="John Doe"
-     *                     ),
-     *                     @OA\Property(
-     *                         property="email",
-     *                         type="string",
-     *                         example="john@example.com"
-     *                     )
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="full_name", type="string"),
+     *                     @OA\Property(property="email", type="string")
      *                 ),
      *                 @OA\Property(
      *                     property="domain",
      *                     type="object",
-     *                     nullable=true,
-     *                     @OA\Property(
-     *                         property="id",
-     *                         type="integer",
-     *                         example=1
-     *                     ),
-     *                     @OA\Property(
-     *                         property="name",
-     *                         type="string",
-     *                         example="Electronics"
-     *                     )
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
      *                 ),
      *                 @OA\Property(
      *                     property="workshop",
      *                     type="object",
      *                     nullable=true,
-     *                     @OA\Property(
-     *                         property="id",
-     *                         type="integer",
-     *                         example=1
-     *                     ),
-     *                     @OA\Property(
-     *                         property="supplier_id",
-     *                         type="integer",
-     *                         example=1
-     *                     )
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="supplier_id", type="integer")
      *                 ),
      *                 @OA\Property(
      *                     property="importer",
      *                     type="object",
      *                     nullable=true,
-     *                     @OA\Property(
-     *                         property="id",
-     *                         type="integer",
-     *                         example=1
-     *                     ),
-     *                     @OA\Property(
-     *                         property="supplier_id",
-     *                         type="integer",
-     *                         example=1
-     *                     )
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="supplier_id", type="integer")
      *                 ),
      *                 @OA\Property(
      *                     property="merchant",
      *                     type="object",
      *                     nullable=true,
-     *                     @OA\Property(
-     *                         property="id",
-     *                         type="integer",
-     *                         example=1
-     *                     ),
-     *                     @OA\Property(
-     *                         property="supplier_id",
-     *                         type="integer",
-     *                         example=1
-     *                     )
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="supplier_id", type="integer")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="type",
+     *                     type="string",
+     *                     enum={"workshop", "importer", "merchant", "none"},
+     *                     example="workshop"
      *                 )
      *             )
      *         )
@@ -174,11 +92,7 @@ class SupplierController extends Controller
      *         response=404,
      *         description="Supplier not found",
      *         @OA\JsonContent(
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Supplier not found"
-     *             )
+     *             @OA\Property(property="message", type="string", example="Supplier not found")
      *         )
      *     )
      * )
@@ -187,12 +101,22 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::with(['user', 'domain', 'workshop', 'importer', 'merchant'])->findOrFail($id);
 
+        $type = 'none';
+        if ($supplier->workshop) {
+            $type = 'workshop';
+        } elseif ($supplier->importer) {
+            $type = 'importer';
+        } elseif ($supplier->merchant) {
+            $type = 'merchant';
+        }
+
+        $supplier->type = $type;
+
         return response()->json([
             'message' => 'Supplier retrieved successfully',
             'data' => $supplier
         ], 200);
     }
-
     /**
      * @OA\Get(
      *     path="/api/suppliers/by-user/{userId}",
