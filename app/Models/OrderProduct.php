@@ -12,6 +12,7 @@ class OrderProduct extends Model
     protected $primaryKey = ['order_id', 'product_id'];
 
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $fillable = [
         'order_id',

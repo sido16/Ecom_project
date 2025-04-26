@@ -512,4 +512,55 @@ class ProductController extends Controller
             'message' => 'Product deleted successfully'
         ], 200);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/products/{id}",
+     *     summary="Get Product by ID",
+     *     description="Retrieves a single product by its ID.",
+     *     operationId="showProduct",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the product to retrieve",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Smartphone"),
+     *                 @OA\Property(property="price", type="number", format="float", example=599.99),
+     *                 @OA\Property(property="supplier_id", type="integer", example=1),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-03T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-03T12:00:00Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found")
+     *         )
+     *     )
+     * )
+     */
+    public function show($id)
+    {
+        $product = Product::findOrFail($id);
+
+        return response()->json([
+            'message' => 'Product retrieved successfully',
+            'data' => $product
+        ], 200);
+    }
 }

@@ -44,7 +44,7 @@ class DomainController extends Controller
      */
     public function index()
     {
-        $domains = Domain::select('id', 'name')->get();
+        $domains = Domain::all();
         return response()->json([
             'message' => 'Domains retrieved successfully',
             'data' => $domains

@@ -693,4 +693,60 @@ class SupplierController extends Controller
             'message' => 'Supplier deleted successfully'
         ], 200);
     }
+
+/**
+     * @OA\Get(
+     *     path="/api/suppliers/{id}/products",
+     *     summary="Get Products by Supplier",
+     *     description="Retrieves all products associated with a specific supplier by their ID.",
+     *     operationId="getSupplierProducts",
+     *     tags={"Suppliers"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the supplier whose products are to be retrieved",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Products retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Smartphone"),
+     *                     @OA\Property(property="price", type="number", format="float", example=599.99),
+     *                     @OA\Property(property="supplier_id", type="integer", example=1),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-03T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-03T12:00:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Supplier not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Supplier not found")
+     *         )
+     *     )
+     * )
+     */
+    public function getSupplierProducts($id)
+    {
+        $supplier = Supplier::findOrFail($id);
+        $products = $supplier->products()->get();
+
+        return response()->json([
+            'message' => 'Products retrieved successfully',
+            'data' => $products
+        ], 200);
+    }
+
 }

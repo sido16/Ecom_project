@@ -7,6 +7,9 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CategoryController;
+
 
 
 
@@ -44,13 +47,37 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('suppliers', [SupplierController::class, 'store']);
-    Route::get('/suppliers/by-user/{userId}', [SupplierController::class, 'getSuppliersByUserId']);
-    Route::get('suppliers/{id}', [SupplierController::class, 'show']);
-    Route::post('suppliers/{id}', [SupplierController::class, 'update']);
-    Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
-    Route::post('products', [ProductController::class, 'store']);
-    Route::post('products/{id}', [ProductController::class, 'update']);
-    Route::delete('products/{id}', [ProductController::class, 'destroy']);
-    Route::get('/domains', [DomainController::class, 'index']);
+    // Suppliers
+    Route::prefix('suppliers')->group(function () {
+        Route::post('/', [SupplierController::class, 'store']);
+        Route::get('/by-user/{userId}', [SupplierController::class, 'getSuppliersByUserId']);
+        Route::get('/{id}', [SupplierController::class, 'show']);
+        Route::post('/{id}', [SupplierController::class, 'update']);
+        Route::delete('/{id}', [SupplierController::class, 'destroy']);
+        Route::get('/{id}/products', [SupplierController::class, 'getSupplierProducts']);
+    });
+
+    // Products
+    Route::prefix('products')->group(function () {
+        Route::post('/', [ProductController::class, 'store']);
+        Route::post('/{id}', [ProductController::class, 'update']);
+        Route::delete('/{id}', [ProductController::class, 'destroy']);
+        Route::get('/{id}', [ProductController::class, 'show']);
+    });
+
+    // Orders
+    Route::prefix('orders')->group(function () {
+        Route::post('/buy-now', [OrderController::class, 'buyNow']);
+        Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
+        Route::put('/{orderId}/validate', [OrderController::class, 'validateCart']);
+    });
 });
+
+// Public Routes
+Route::get('/domains', [DomainController::class, 'index']);
+Route::get('/Category', [CategoryController::class, 'index']);
+
+
+
+
+
