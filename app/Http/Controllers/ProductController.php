@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductPicture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,7 +20,7 @@ class ProductController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"supplier_id", "name", "price", "quantity", "minimum_quantity", "visibility"},
+     *                 required={"supplier_id", "name", "price", "quantity", "minimum_quantity"},
      *                 @OA\Property(
      *                     property="supplier_id",
      *                     type="integer",
@@ -29,7 +30,7 @@ class ProductController extends Controller
      *                 @OA\Property(
      *                     property="name",
      *                     type="string",
-     *                     maxLength=255,
+     *                     maxLength=100,
      *                     description="Name of the product",
      *                     example="Smartphone X"
      *                 ),
@@ -67,17 +68,13 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
-     *                     property="visibility",
-     *                     type="string",
-     *                     enum={"public", "private"},
-     *                     description="Visibility of the product",
-     *                     example="public"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="picture",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Product image (JPEG, PNG, JPG, max 2MB)",
+     *                     property="pictures[]",
+     *                     type="array",
+     *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
+     *                     @OA\Items(
+     *                         type="string",
+     *                         format="binary"
+     *                     ),
      *                     nullable=true
      *                 )
      *             )
@@ -139,17 +136,6 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
-     *                     property="visibility",
-     *                     type="string",
-     *                     example="public"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="picture",
-     *                     type="string",
-     *                     example="product_pictures/image1.jpg",
-     *                     nullable=true
-     *                 ),
-     *                 @OA\Property(
      *                     property="created_at",
      *                     type="string",
      *                     format="date-time",
@@ -160,6 +146,28 @@ class ProductController extends Controller
      *                     type="string",
      *                     format="date-time",
      *                     example="2025-04-14T12:00:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="pictures",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(
+     *                             property="id",
+     *                             type="integer",
+     *                             example=1
+     *                         ),
+     *                         @OA\Property(
+     *                             property="product_id",
+     *                             type="integer",
+     *                             example=1
+     *                         ),
+     *                         @OA\Property(
+     *                             property="picture",
+     *                             type="string",
+     *                             example="product_pictures/image1.jpg"
+     *                         )
+     *                     )
      *                 )
      *             )
      *         )
@@ -186,14 +194,13 @@ class ProductController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'required|exists:suppliers,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
             'minimum_quantity' => 'required|integer|min:0',
-            'visibility' => 'required|in:public,private',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -203,26 +210,30 @@ class ProductController extends Controller
             ], 422);
         }
 
-        $data = $request->only([
+        $product = Product::create($request->only([
             'supplier_id',
             'name',
             'description',
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity',
-            'visibility'
-        ]);
+            'minimum_quantity'
+        ]));
 
-        if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
-            $data['picture'] = $request->file('picture')->store('product_pictures', 'public');
+        if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
+            foreach ($request->file('pictures') as $picture) {
+                if ($picture->isValid()) {
+                    ProductPicture::create([
+                        'product_id' => $product->id,
+                        'picture' => $picture->store('product_pictures', 'public')
+                    ]);
+                }
+            }
         }
-
-        $product = Product::create($data);
 
         return response()->json([
             'message' => 'Product created successfully',
-            'data' => $product
+            'data' => $product->load('pictures')
         ], 201);
     }
 
@@ -255,7 +266,7 @@ class ProductController extends Controller
      *                 @OA\Property(
      *                     property="name",
      *                     type="string",
-     *                     maxLength=255,
+     *                     maxLength=100,
      *                     description="Name of the product",
      *                     example="Smartphone X"
      *                 ),
@@ -293,17 +304,13 @@ class ProductController extends Controller
      *                     example=5
      *                 ),
      *                 @OA\Property(
-     *                     property="visibility",
-     *                     type="string",
-     *                     enum={"public", "private"},
-     *                     description="Visibility of the product",
-     *                     example="public"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="picture",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Product image (JPEG, PNG, JPG, max 2MB)",
+     *                     property="pictures[]",
+     *                     type="array",
+     *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
+     *                     @OA\Items(
+     *                         type="string",
+     *                         format="binary"
+     *                     ),
      *                     nullable=true
      *                 )
      *             )
@@ -365,17 +372,6 @@ class ProductController extends Controller
      *                     example=5
      *                 ),
      *                 @OA\Property(
-     *                     property="visibility",
-     *                     type="string",
-     *                     example="public"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="picture",
-     *                     type="string",
-     *                     example="product_pictures/image1.jpg",
-     *                     nullable=true
-     *                 ),
-     *                 @OA\Property(
      *                     property="created_at",
      *                     type="string",
      *                     format="date-time",
@@ -386,6 +382,28 @@ class ProductController extends Controller
      *                     type="string",
      *                     format="date-time",
      *                     example="2025-04-14T12:01:00Z"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="pictures",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(
+     *                             property="id",
+     *                             type="integer",
+     *                             example=1
+     *                         ),
+     *                         @OA\Property(
+     *                             property="product_id",
+     *                             type="integer",
+     *                             example=1
+     *                         ),
+     *                         @OA\Property(
+     *                             property="picture",
+     *                             type="string",
+     *                             example="product_pictures/image1.jpg"
+     *                         )
+     *                     )
      *                 )
      *             )
      *         )
@@ -425,14 +443,13 @@ class ProductController extends Controller
 
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'sometimes|exists:suppliers,id',
-            'name' => 'sometimes|string|max:255',
+            'name' => 'sometimes|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'price' => 'sometimes|numeric|min:0',
             'quantity' => 'sometimes|integer|min:0',
             'minimum_quantity' => 'sometimes|integer|min:0',
-            'visibility' => 'sometimes|in:public,private',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -449,19 +466,26 @@ class ProductController extends Controller
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity',
-            'visibility'
+            'minimum_quantity'
         ]);
-
-        if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
-            $data['picture'] = $request->file('picture')->store('product_pictures', 'public');
-        }
 
         $product->update($data);
 
+        if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
+            ProductPicture::where('product_id', $product->id)->delete();
+            foreach ($request->file('pictures') as $picture) {
+                if ($picture->isValid()) {
+                    ProductPicture::create([
+                        'product_id' => $product->id,
+                        'picture' => $picture->store('product_pictures', 'public')
+                    ]);
+                }
+            }
+        }
+
         return response()->json([
             'message' => 'Product updated successfully',
-            'data' => $product
+            'data' => $product->load('pictures')
         ], 200);
     }
 
@@ -473,7 +497,7 @@ class ProductController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
      *         name="id",
-         *         in="path",
+     *         in="path",
      *         required=true,
      *         @OA\Schema(
      *             type="integer",
@@ -517,7 +541,7 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/api/products/{id}",
      *     summary="Get Product by ID",
-     *     description="Retrieves a single product by its ID.",
+     *     description="Retrieves a single product by its ID, including associated images.",
      *     operationId="showProduct",
      *     tags={"Products"},
      *     @OA\Parameter(
@@ -541,7 +565,17 @@ class ProductController extends Controller
      *                 @OA\Property(property="price", type="number", format="float", example=599.99),
      *                 @OA\Property(property="supplier_id", type="integer", example=1),
      *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-03T12:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-03T12:00:00Z")
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-03T12:00:00Z"),
+     *                 @OA\Property(
+     *                     property="images",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="product_id", type="integer", example=1),
+     *                         @OA\Property(property="picture", type="string", example="/images/smartphone_front.jpg")
+     *                     )
+     *                 )
      *             )
      *         )
      *     ),
@@ -556,11 +590,13 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('pictures')->findOrFail($id);
 
         return response()->json([
             'message' => 'Product retrieved successfully',
             'data' => $product
         ], 200);
     }
+
+    
 }

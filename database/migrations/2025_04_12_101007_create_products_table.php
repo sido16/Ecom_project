@@ -14,7 +14,6 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');            $table->string('name');
             $table->decimal('price', 10, 2)->nullable();
-            $table->string('picture', 255)->nullable();
             $table->text('description')->nullable();
             $table->enum('visibility', ['public', 'private']);
             $table->unsignedInteger('quantity')->nullable();

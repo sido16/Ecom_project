@@ -14,7 +14,6 @@ class Product extends Model
         'category_id',
         'name',
         'price',
-        'picture',
         'description',
         'visibility',
         'quantity',
@@ -44,4 +43,10 @@ class Product extends Model
                     ->withPivot('quantity')
                     ->withTimestamps();
     }
+
+    public function pictures()
+    {
+        return $this->hasMany(ProductPicture::class, 'product_id');
+    }
+
 }

@@ -1045,8 +1045,7 @@
                                     "name",
                                     "price",
                                     "quantity",
-                                    "minimum_quantity",
-                                    "visibility"
+                                    "minimum_quantity"
                                 ],
                                 "properties": {
                                     "supplier_id": {
@@ -1057,7 +1056,7 @@
                                     "name": {
                                         "description": "Name of the product",
                                         "type": "string",
-                                        "maxLength": 255,
+                                        "maxLength": 100,
                                         "example": "Smartphone X"
                                     },
                                     "description": {
@@ -1088,19 +1087,13 @@
                                         "type": "integer",
                                         "example": 10
                                     },
-                                    "visibility": {
-                                        "description": "Visibility of the product",
-                                        "type": "string",
-                                        "enum": [
-                                            "public",
-                                            "private"
-                                        ],
-                                        "example": "public"
-                                    },
-                                    "picture": {
-                                        "description": "Product image (JPEG, PNG, JPG, max 2MB)",
-                                        "type": "string",
-                                        "format": "binary",
+                                    "pictures[]": {
+                                        "description": "Array of product images (JPEG, PNG, JPG, max 2MB each)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
                                         "nullable": true
                                     }
                                 },
@@ -1157,15 +1150,6 @@
                                                     "type": "integer",
                                                     "example": 10
                                                 },
-                                                "visibility": {
-                                                    "type": "string",
-                                                    "example": "public"
-                                                },
-                                                "picture": {
-                                                    "type": "string",
-                                                    "example": "product_pictures/image1.jpg",
-                                                    "nullable": true
-                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
@@ -1175,6 +1159,26 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-04-14T12:00:00Z"
+                                                },
+                                                "pictures": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "product_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "picture": {
+                                                                "type": "string",
+                                                                "example": "product_pictures/image1.jpg"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1221,7 +1225,7 @@
                     "Products"
                 ],
                 "summary": "Get Product by ID",
-                "description": "Retrieves a single product by its ID.",
+                "description": "Retrieves a single product by its ID, including associated images.",
                 "operationId": "showProduct",
                 "parameters": [
                     {
@@ -1273,6 +1277,26 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-07-03T12:00:00Z"
+                                                },
+                                                "images": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "product_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "picture": {
+                                                                "type": "string",
+                                                                "example": "/images/smartphone_front.jpg"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1332,7 +1356,7 @@
                                     "name": {
                                         "description": "Name of the product",
                                         "type": "string",
-                                        "maxLength": 255,
+                                        "maxLength": 100,
                                         "example": "Smartphone X"
                                     },
                                     "description": {
@@ -1363,19 +1387,13 @@
                                         "type": "integer",
                                         "example": 5
                                     },
-                                    "visibility": {
-                                        "description": "Visibility of the product",
-                                        "type": "string",
-                                        "enum": [
-                                            "public",
-                                            "private"
-                                        ],
-                                        "example": "public"
-                                    },
-                                    "picture": {
-                                        "description": "Product image (JPEG, PNG, JPG, max 2MB)",
-                                        "type": "string",
-                                        "format": "binary",
+                                    "pictures[]": {
+                                        "description": "Array of product images (JPEG, PNG, JPG, max 2MB each)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
                                         "nullable": true
                                     }
                                 },
@@ -1432,15 +1450,6 @@
                                                     "type": "integer",
                                                     "example": 5
                                                 },
-                                                "visibility": {
-                                                    "type": "string",
-                                                    "example": "public"
-                                                },
-                                                "picture": {
-                                                    "type": "string",
-                                                    "example": "product_pictures/image1.jpg",
-                                                    "nullable": true
-                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
@@ -1450,6 +1459,26 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-04-14T12:01:00Z"
+                                                },
+                                                "pictures": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "product_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "picture": {
+                                                                "type": "string",
+                                                                "example": "product_pictures/image1.jpg"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"

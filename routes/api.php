@@ -75,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Public Routes
 Route::get('/domains', [DomainController::class, 'index']);
-Route::get('/Category', [CategoryController::class, 'index']);
+Route::get('/Categories', [CategoryController::class, 'index']);
 
 
 
