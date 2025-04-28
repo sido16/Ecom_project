@@ -698,7 +698,7 @@ class SupplierController extends Controller
      * @OA\Get(
      *     path="/api/suppliers/{id}/products",
      *     summary="Get Products by Supplier",
-     *     description="Retrieves all products associated with a specific supplier by their ID.",
+     *     description="Retrieves all products associated with a specific supplier by their ID, including product images.",
      *     operationId="getSupplierProducts",
      *     tags={"Suppliers"},
      *     @OA\Parameter(
@@ -723,8 +723,18 @@ class SupplierController extends Controller
      *                     @OA\Property(property="name", type="string", example="Smartphone"),
      *                     @OA\Property(property="price", type="number", format="float", example=599.99),
      *                     @OA\Property(property="supplier_id", type="integer", example=1),
-     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-03T12:00:00Z"),
-     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-03T12:00:00Z")
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
+     *                     @OA\Property(
+     *                         property="pictures",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="product_id", type="integer", example=1),
+     *                             @OA\Property(property="picture", type="string", example="/images/smartphone_front.jpg")
+     *                         )
+     *                     )
      *                 )
      *             )
      *         )
@@ -741,12 +751,11 @@ class SupplierController extends Controller
     public function getSupplierProducts($id)
     {
         $supplier = Supplier::findOrFail($id);
-        $products = $supplier->products()->get();
+        $products = $supplier->products()->with('pictures')->get();
 
         return response()->json([
             'message' => 'Products retrieved successfully',
             'data' => $products
         ], 200);
     }
-
 }

@@ -9,6 +9,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ServiceProviderController;
+
 
 
 
@@ -71,11 +73,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
         Route::put('/{orderId}/validate', [OrderController::class, 'validateCart']);
     });
+
+    //serviceproviders
+    Route::post('/service-providers', [ServiceProviderController::class, 'store']);
+
 });
+
+
+
+
 
 // Public Routes
 Route::get('/domains', [DomainController::class, 'index']);
-Route::get('/Categories', [CategoryController::class, 'index']);
+Route::get('/categories', [CategoryController::class, 'index']);
 
 
 
