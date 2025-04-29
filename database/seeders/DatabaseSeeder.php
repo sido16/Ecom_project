@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             DomainSeeder::class,
             CategorySeeder::class,
             SupplierSeeder::class,
+            SkillDomainSeeder::class,
+            SkillSeeder::class,
         ]);
     }
 }

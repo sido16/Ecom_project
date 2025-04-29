@@ -107,6 +107,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/domains', [DomainController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/skills', [SkillsController::class, 'index']);
+Route::get('/skill-domains', [SkillsController::class, 'indexDomains']);
+
 
 
 
