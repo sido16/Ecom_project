@@ -10,6 +10,9 @@ use App\Http\Controllers\DomainController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\ProjectController;
+
+
 
 
 
@@ -57,6 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}', [SupplierController::class, 'update']);
         Route::delete('/{id}', [SupplierController::class, 'destroy']);
         Route::get('/{id}/products', [SupplierController::class, 'getSupplierProducts']);
+        Route::post('/{supplier}/products/import', [ProductController::class, 'import']);
+
     });
 
     // Products
@@ -74,8 +79,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{orderId}/validate', [OrderController::class, 'validateCart']);
     });
 
-    //serviceproviders
-    Route::post('/service-providers', [ServiceProviderController::class, 'store']);
+    //service_providers
+    Route::prefix('service-providers')->group(function () {//serviceproviders
+        Route::post('/', [ServiceProviderController::class, 'store']);
+        Route::post('/{id}/pictures', [ServiceProviderController::class, 'uploadPictures']);
+        Route::post('/{id}/projects', [ProjectController::class, 'store']);
+        Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
+    });
+
+
+
+    //service_providers_projects
+    Route::delete('projects/{id}', [ProjectController::class, 'destroy']);
+
+
+
 
 });
 

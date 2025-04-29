@@ -7,12 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Project extends Model
 {
     protected $table = 'projects';
-    protected $fillable = ['service_provider_id', 'title', 'description', 'start_date', 'end_date'];
+    protected $fillable = ['service_provider_id', 'title', 'description'];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+   
 
     public function serviceProvider()
     {

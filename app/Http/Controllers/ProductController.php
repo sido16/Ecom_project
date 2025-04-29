@@ -6,6 +6,14 @@ use App\Models\Product;
 use App\Models\ProductPicture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Imports\ProductImport;
+use App\Models\Supplier;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Database\QueryException;
+use ZipArchive;
 
 class ProductController extends Controller
 {
@@ -598,5 +606,55 @@ class ProductController extends Controller
         ], 200);
     }
 
+    // public function import(Request $request, $supplier)
+    // {
+    //     // Validate supplier
+    //     $supplier = Supplier::where('id', $supplier)->where('user_id', Auth::id())->firstOrFail();
+
+    //     // Validate request
+    //     $request->validate([
+    //         'excel_file' => 'required|file|mimes:xlsx,xls,csv',
+    //         'zip_file' => 'required|file|mimes:zip|max:20480', // 20MB max
+    //     ]);
+
+    //     try {
+    //         // Extract ZIP
+    //         $zipFile = $request->file('zip_file');
+    //         $zip = new ZipArchive;
+    //         if ($zip->open($zipFile->getRealPath()) !== true) {
+    //             throw new \Exception('Failed to open ZIP file');
+    //         }
+
+    //         $tempDir = storage_path('app/temp/' . uniqid());
+    //         $zip->extractTo($tempDir);
+    //         $zip->close();
+
+    //         // Map image filenames to storage paths
+    //         $imagePaths = [];
+    //         $files = glob($tempDir . '/*.{jpg,jpeg,png}', GLOB_BRACE);
+    //         foreach ($files as $file) {
+    //             $filename = basename($file);
+    //             $path = Storage::disk('public')->putFile('product_pictures', $file);
+    //             $imagePaths[$filename] = $path;
+    //         }
+
+    //         // Import Excel
+    //         Excel::import(new ProductImport($supplier->id, $imagePaths), $request->file('excel_file'));
+
+    //         // Clean up
+    //         Storage::deleteDirectory($tempDir);
+
+    //         // Log success
+    //         Log::info("Products imported for supplier: ID {$supplier->id}");
+
+    //         return response()->json(['message' => 'Products imported successfully'], 201);
+    //     } catch (QueryException $e) {
+    //         Log::error('Failed to import products: ' . $e->getMessage());
+    //         return response()->json(['message' => 'Failed to import products', 'error' => 'Database error'], 500);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to process import: ' . $e->getMessage());
+    //         return response()->json(['message' => 'Failed to import products', 'error' => 'Processing error'], 500);
+    //     }
+    // }
     
 }
