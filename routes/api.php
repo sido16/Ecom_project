@@ -11,6 +11,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SkillsController;
+
 
 
 
@@ -104,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public Routes
 Route::get('/domains', [DomainController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/skills', [SkillsController::class, 'index']);
 
 
 
