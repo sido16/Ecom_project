@@ -219,4 +219,80 @@ class OrderController extends Controller
             return response()->json(['message' => 'Cart validated successfully', 'order_id' => $order->id], 200);
         });
     }
+
+    
+     /**
+     * @OA\Get(
+     *     path="/api/cart",
+     *     summary="Get User Cart",
+     *     description="Retrieves the authenticated user's current cart with items.",
+     *     operationId="getUserCart",
+     *     tags={"Cart"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cart retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="total_price", type="number", example=35.00),
+     *                 @OA\Property(property="items", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="product_id", type="integer", example=1),
+     *                     @OA\Property(property="quantity", type="integer", example=2),
+     *                     @OA\Property(property="price", type="number", example=10.00),
+     *                     @OA\Property(property="product", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Red T-shirt"),
+     *                         @OA\Property(property="pictures", type="array", @OA\Items(
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg")
+     *                         ))
+     *                     )
+     *                 ))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Cart not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cart not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve cart"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function getCart(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $cart = Order::where('user_id', $user->id)
+                 ->where('is_validated', 'false')
+                ->with(['orderProducts.product.pictures'])
+                ->first();
+
+            if (!$cart) {
+                return response()->json([
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            return response()->json(['data' => $cart], 200);
+        } catch (\Exception $e) {
+            // Log::error('Failed to retrieve cart: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to retrieve cart',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
 }

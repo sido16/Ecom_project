@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductPicture;
+use App\Models\workshop;
+use App\Models\Importer;
+use App\Models\Merchant;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ProductImport;
@@ -320,6 +324,16 @@ class ProductController extends Controller
      *                         format="binary"
      *                     ),
      *                     nullable=true
+     *                 ),
+     *                 @OA\Property(
+     *                     property="images_to_delete[]",
+     *                     type="array",
+     *                     description="Array of image IDs to delete",
+     *                     @OA\Items(
+     *                         type="integer",
+     *                         example=1
+     *                     ),
+     *                     nullable=true
      *                 )
      *             )
      *         )
@@ -458,6 +472,7 @@ class ProductController extends Controller
             'quantity' => 'sometimes|integer|min:0',
             'minimum_quantity' => 'sometimes|integer|min:0',
             'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'images_to_delete.*' => 'sometimes|integer|exists:product_pictures,id',
         ]);
 
         if ($validator->fails()) {
@@ -479,8 +494,15 @@ class ProductController extends Controller
 
         $product->update($data);
 
+        // Handle image deletions
+        if ($request->has('images_to_delete') && is_array($request->input('images_to_delete'))) {
+            ProductPicture::whereIn('id', $request->input('images_to_delete'))
+                ->where('product_id', $product->id)
+                ->delete();
+        }
+
+        // Handle new image uploads
         if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
-            ProductPicture::where('product_id', $product->id)->delete();
             foreach ($request->file('pictures') as $picture) {
                 if ($picture->isValid()) {
                     ProductPicture::create([
@@ -496,6 +518,7 @@ class ProductController extends Controller
             'data' => $product->load('pictures')
         ], 200);
     }
+
 
     /**
      * @OA\Delete(
@@ -606,55 +629,305 @@ class ProductController extends Controller
         ], 200);
     }
 
-    // public function import(Request $request, $supplier)
-    // {
-    //     // Validate supplier
-    //     $supplier = Supplier::where('id', $supplier)->where('user_id', Auth::id())->firstOrFail();
+/**
+ * @OA\Get(
+ *     path="/api/products/{type}",
+ *     summary="List Products by Supplier Sub-type",
+ *     description="Retrieves all public products filtered by a single supplier sub-type (workshop, importer, or merchant).",
+ *     operationId="listProductsBySubType",
+ *     tags={"Products"},
+ *     @OA\Parameter(
+ *         name="type",
+ *         in="path",
+ *         description="Supplier sub-type (workshop, importer, or merchant)",
+ *         required=true,
+ *         @OA\Schema(type="string", enum={"workshop", "importer", "merchant"})
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Products retrieved successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array", @OA\Items(
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="supplier_id", type="integer", example=1),
+ *                 @OA\Property(property="category_id", type="integer", example=1),
+ *                 @OA\Property(property="name", type="string", example="Red T-shirt"),
+ *                 @OA\Property(property="price", type="number", example=10.00),
+ *                 @OA\Property(property="description", type="string", example="Comfortable cotton t-shirt"),
+ *                 @OA\Property(property="visibility", type="string", example="public"),
+ *                 @OA\Property(property="quantity", type="integer", example=100),
+ *                 @OA\Property(property="minimum_quantity", type="integer", example=1),
+ *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="pictures", type="array", @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="product_id", type="integer", example=1),
+ *                     @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg"),
+ *                     @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z")
+ *                 ))
+ *             ))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid supplier type",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Invalid supplier type")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to retrieve products"),
+ *             @OA\Property(property="error", type="string", example="Database error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+    public function index(Request $request, $type)
+    {
+        try {
+            if (!in_array($type, ['workshop', 'importer', 'merchant'])) {
+                return response()->json(['message' => 'Invalid supplier type'], 400);
+            }
 
-    //     // Validate request
-    //     $request->validate([
-    //         'excel_file' => 'required|file|mimes:xlsx,xls,csv',
-    //         'zip_file' => 'required|file|mimes:zip|max:20480', // 20MB max
-    //     ]);
+            $products = Product::with('pictures')
+                ->where('visibility', 'public')
+                ->whereHas('supplier', fn ($q) => $q->has($type))
+                ->get();
 
-    //     try {
-    //         // Extract ZIP
-    //         $zipFile = $request->file('zip_file');
-    //         $zip = new ZipArchive;
-    //         if ($zip->open($zipFile->getRealPath()) !== true) {
-    //             throw new \Exception('Failed to open ZIP file');
-    //         }
+            return response()->json(['data' => $products], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve products',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
 
-    //         $tempDir = storage_path('app/temp/' . uniqid());
-    //         $zip->extractTo($tempDir);
-    //         $zip->close();
 
-    //         // Map image filenames to storage paths
-    //         $imagePaths = [];
-    //         $files = glob($tempDir . '/*.{jpg,jpeg,png}', GLOB_BRACE);
-    //         foreach ($files as $file) {
-    //             $filename = basename($file);
-    //             $path = Storage::disk('public')->putFile('product_pictures', $file);
-    //             $imagePaths[$filename] = $path;
-    //         }
 
-    //         // Import Excel
-    //         Excel::import(new ProductImport($supplier->id, $imagePaths), $request->file('excel_file'));
+    /**
+     * @OA\Get(
+     *     path="/api/products/{id}/supplier",
+     *     summary="Get Product with Supplier",
+     *     description="Retrieves a public product with its supplier information by ID.",
+     *     operationId="getProductWithSupplier",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the product",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Red T-shirt"),
+     *                 @OA\Property(property="price", type="number", example=10.00),
+     *                 @OA\Property(property="description", type="string", example="Comfortable cotton t-shirt"),
+     *                 @OA\Property(property="pictures", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg")
+     *                 )),
+     *                 @OA\Property(property="supplier", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="ABC Imports"),
+     *                     @OA\Property(property="type", type="string", example="importer")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve product"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function showWithSupplier($id)
+    {
+        try {
+            $product = Product::with(['pictures', 'supplier'])
+                ->where('visibility', 'public')
+                ->findOrFail($id);
 
-    //         // Clean up
-    //         Storage::deleteDirectory($tempDir);
+            return response()->json(['data' => $product], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Product not found: ID ' . $id);
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve product: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to retrieve product',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
 
-    //         // Log success
-    //         Log::info("Products imported for supplier: ID {$supplier->id}");
+       /**
+     * @OA\Get(
+     *     path="/api/products/{id}/store",
+     *     summary="Get Supplier by Product",
+     *     description="Retrieves the supplier information for a public product by ID.",
+     *     operationId="getSupplierByProduct",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the product",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Supplier retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="ABC Imports"),
+     *                 @OA\Property(property="type", type="string", example="importer")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product or supplier not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product or supplier not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve supplier"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function getStore($id)
+    {
+        try {
+            $product = Product::where('visibility', 'public')
+                ->with('supplier')
+                ->findOrFail($id);
 
-    //         return response()->json(['message' => 'Products imported successfully'], 201);
-    //     } catch (QueryException $e) {
-    //         Log::error('Failed to import products: ' . $e->getMessage());
-    //         return response()->json(['message' => 'Failed to import products', 'error' => 'Database error'], 500);
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to process import: ' . $e->getMessage());
-    //         return response()->json(['message' => 'Failed to import products', 'error' => 'Processing error'], 500);
-    //     }
-    // }
-    
+            if (!$product->supplier) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Supplier not found');
+            }
+
+            return response()->json([
+                'data' => $product->supplier
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Product or supplier not found: ID ' . $id);
+            return response()->json([
+                'message' => 'Product or supplier not found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve supplier: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to retrieve supplier',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
+
+        /**
+     * @OA\Get(
+     *     path="/api/products",
+     *     summary="List All Products",
+     *     description="Retrieves all public products with their pictures.",
+     *     operationId="listAllProducts",
+     *     tags={"Products"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Products retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="supplier_id", type="integer", example=1),
+     *                 @OA\Property(property="category_id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Red T-shirt"),
+     *                 @OA\Property(property="price", type="number", example=10.00),
+     *                 @OA\Property(property="description", type="string", example="Comfortable cotton t-shirt"),
+     *                 @OA\Property(property="visibility", type="string", example="public"),
+     *                 @OA\Property(property="quantity", type="integer", example=100),
+     *                 @OA\Property(property="minimum_quantity", type="integer", example=1),
+     *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                 @OA\Property(property="pictures", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="product_id", type="integer", example=1),
+     *                     @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg"),
+     *                     @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z")
+     *                 ))
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve products"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function all(Request $request)
+    {
+        try {
+            $products = Product::with('pictures')
+                ->where('visibility', 'public')
+                ->get();
+
+            return response()->json(['data' => $products], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve products',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
+
+
 }
+
+
+
+
+
+
+
+
+    

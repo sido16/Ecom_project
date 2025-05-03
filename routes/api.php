@@ -72,6 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::get('/{id}', [ProductController::class, 'show']);
+        Route::get('/{id}', [ProductController::class, 'showWithSupplier'])->whereNumber('id');
+        Route::get('/{id}/store', [ProductController::class, 'getStore']);
+        Route::get('/{type}', [ProductController::class, 'index'])->where('type', 'workshop|importer|merchant');;
+        Route::get('/', [ProductController::class, 'all']);
     });
 
     // Orders
@@ -79,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/buy-now', [OrderController::class, 'buyNow']);
         Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
         Route::put('/{orderId}/validate', [OrderController::class, 'validateCart']);
+        Route::get('/cart', [OrderController::class, 'getCart']);
     });
 
     //service_providers
