@@ -92,6 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/pictures', [ServiceProviderController::class, 'uploadPictures']);
         Route::post('/{id}/projects', [ProjectController::class, 'store']);
         Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
+        Route::get('/{id}', [ServiceProviderController::class, 'show'])->whereNumber('id');
+
     });
 
 
