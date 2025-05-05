@@ -9,9 +9,8 @@ class OrderProduct extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = ['order_id', 'product_id'];
-
-    public $incrementing = false;
+    protected $primaryKey = 'id'; // Use single id column
+    public $incrementing = true; // Auto-incrementing ID
     public $timestamps = false;
 
     protected $fillable = [
