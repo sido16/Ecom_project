@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Suppliers
     Route::prefix('suppliers')->group(function () {
         Route::post('/', [SupplierController::class, 'store']);
+        Route::get('/', [SupplierController::class, 'index']);
         Route::get('/by-user/{userId}', [SupplierController::class, 'getSuppliersByUserId']);
         Route::get('/{id}', [SupplierController::class, 'show']);
         Route::post('/{id}', [SupplierController::class, 'update']);

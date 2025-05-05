@@ -758,4 +758,85 @@ class SupplierController extends Controller
             'data' => $products
         ], 200);
     }
+
+    
+    /**
+     * @OA\Get(
+     *     path="/api/suppliers",
+     *     summary="Get All Suppliers",
+     *     description="Retrieves a list of all suppliers with their attributes, type (workshop, importer, or merchant), and associated domain.",
+     *     operationId="getAllSuppliers",
+     *     tags={"Suppliers"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Suppliers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="business_name", type="string", example="Tech Supplies Inc.", nullable=true),
+     *                     @OA\Property(property="address", type="string", example="123 Tech St", nullable=true),
+     *                     @OA\Property(property="description", type="string", example="Supplier of tech components", nullable=true),
+     *                     @OA\Property(property="picture", type="string", example="/storage/pictures/supplier1.jpg", nullable=true),
+     *                     @OA\Property(property="domain_id", type="integer", example=1, nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(
+     *                         property="type",
+     *                         type="string",
+     *                         enum={"workshop", "importer", "merchant", null},
+     *                         example="workshop",
+     *                         description="Type of supplier based on subtable association (workshop, importer, merchant, or null)"
+     *                     ),
+     *                     @OA\Property(
+     *                         property="domain",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Electronics")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve suppliers"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function index()
+    {
+        try {
+            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain'])->get()->map(function ($supplier) {
+                $supplierData = $supplier->toArray();
+                $supplierData['type'] = $supplier->workshop ? 'workshop' : ($supplier->importer ? 'importer' : ($supplier->merchant ? 'merchant' : null));
+                unset(
+                    $supplierData['workshop'],
+                    $supplierData['importer'],
+                    $supplierData['merchant'],
+                    $supplierData['user'],
+                    $supplierData['products']
+                );
+                return $supplierData;
+            });
+            return response()->json(['data' => $suppliers], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve suppliers',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
+
 }
