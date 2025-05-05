@@ -497,6 +497,210 @@ public function show($id)
         }
     }
 
+
+        /**
+     * @OA\Get(
+     *     path="/api/service-providers",
+     *     summary="Get All Service Providers",
+     *     description="Retrieves a list of all service providers with their skills, pictures, and skill domain.",
+     *     operationId="getAllServiceProviders",
+     *     tags={"Service Providers"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Service providers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="skill_domain_id", type="integer", example=1),
+     *                     @OA\Property(property="description", type="string", example="Expert in web development", nullable=true),
+     *                     @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(
+     *                         property="skill_domain",
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Web Development")
+     *                     ),
+     *                     @OA\Property(
+     *                         property="skills",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="PHP")
+     *                         )
+     *                     ),
+     *                     @OA\Property(
+     *                         property="pictures",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="service_provider_id", type="integer", example=1),
+     *                             @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve service providers"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function index()
+    {
+        try {
+            $serviceProviders = ServiceProvider::with(['skills', 'pictures', 'skillDomain'])->get();
+            return response()->json(['data' => $serviceProviders], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve service providers',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
+
+    /**
+ * @OA\Put(
+ *     path="/api/service-providers/{id}",
+ *     summary="Update a Service Provider",
+ *     description="Updates an existing service provider for the authenticated user, modifying domain, skills, and starting price.",
+ *     operationId="updateServiceProvider",
+ *     tags={"Service Providers"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID of the service provider to update",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
+ *             @OA\Property(property="skill_domain_id", type="integer", example=1, description="ID of the skill domain"),
+ *             @OA\Property(property="starting_price", type="number", format="float", example=50.00, description="Starting price for services", nullable=true),
+ *             @OA\Property(
+ *                 property="skill_ids",
+ *                 type="array",
+ *                 @OA\Items(type="integer", example=1),
+ *                 description="Array of skill IDs to associate with the provider"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Service provider updated successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Service provider updated successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
+ *                 @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
+ *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-11T12:00:00Z")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to update this service provider")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Service provider not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Service provider not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The skill_domain_id field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to update service provider"),
+ *             @OA\Property(property="error", type="string", example="Database error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'description' => 'nullable|string',
+        'skill_domain_id' => 'required|exists:skill_domains,id',
+        'starting_price' => 'nullable|numeric|min:0',
+        'skill_ids' => 'required|array|min:1',
+        'skill_ids.*' => 'exists:skills,id',
+    ]);
+
+    try {
+        $serviceProvider = ServiceProvider::findOrFail($id);
+
+        // Check if the authenticated user owns the service provider
+        if ($serviceProvider->user_id !== Auth::id()) {
+            return response()->json(['message' => 'You are not authorized to update this service provider'], 403);
+        }
+
+        $serviceProvider->update([
+            'skill_domain_id' => $request->skill_domain_id,
+            'description' => $request->description,
+            'starting_price' => $request->starting_price,
+        ]);
+
+        // Sync skills (replaces existing skill associations with new ones)
+        $serviceProvider->skills()->sync($request->skill_ids);
+
+        return response()->json([
+            'message' => 'Service provider updated successfully',
+            'data' => $serviceProvider
+        ], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['message' => 'Service provider not found'], 404);
+    } catch (\Illuminate\Database\QueryException $e) {
+        return response()->json([
+            'message' => 'Failed to update service provider',
+            'error' => 'Database error occurred'
+        ], 500);
+    }
+}
      
 
 }

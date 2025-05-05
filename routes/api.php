@@ -91,6 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //service_providers
     Route::prefix('service-providers')->group(function () {//serviceproviders
         Route::post('/', [ServiceProviderController::class, 'store']);
+        Route::get('/', [ServiceProviderController::class, 'index']);
+        Route::put('/{id}', [ServiceProviderController::class, 'update'])->whereNumber('id');
         Route::post('/{id}/pictures', [ServiceProviderController::class, 'uploadPictures']);
         Route::post('/{id}/projects', [ProjectController::class, 'store']);
         Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
