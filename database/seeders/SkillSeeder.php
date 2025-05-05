@@ -15,16 +15,16 @@ class SkillSeeder extends Seeder
     public function run()
     {
         $skills = [
-            ['name' => 'UI/UX Design', 'domain_id' => 1], // Design
-            ['name' => 'Graphic Design', 'domain_id' => 1], // Design
-            ['name' => 'Web Development', 'domain_id' => 2], // Development
-            ['name' => 'Mobile App Development', 'domain_id' => 2], // Development
-            ['name' => 'SEO', 'domain_id' => 3], // Marketing
-            ['name' => 'Social Media Marketing', 'domain_id' => 3], // Marketing
-            ['name' => 'Copywriting', 'domain_id' => 4], // Content Creation
-            ['name' => 'Video Editing', 'domain_id' => 4], // Content Creation
-            ['name' => 'Business Strategy', 'domain_id' => 5], // Consulting
-            ['name' => 'Financial Consulting', 'domain_id' => 5], // Consulting
+            ['name' => 'UI/UX Design' ], // Design
+            ['name' => 'Graphic Design'], // Design
+            ['name' => 'Web Development'], // Development
+            ['name' => 'Mobile App Development'], // Development
+            ['name' => 'SEO'], // Marketing
+            ['name' => 'Social Media Marketing'], // Marketing
+            ['name' => 'Copywriting'], // Content Creation
+            ['name' => 'Video Editing'], // Content Creation
+            ['name' => 'Business Strategy'], // Consulting
+            ['name' => 'Financial Consulting'], // Consulting
         ];
 
         foreach ($skills as $skill) {

@@ -7,7 +7,7 @@ class CreateSkillDomainTable extends Migration
 {
     public function up()
     {
-        Schema::create('skill_domain', function (Blueprint $table) {
+        Schema::create('skill_domains', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
             $table->timestamps();

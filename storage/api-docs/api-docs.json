@@ -2571,7 +2571,7 @@
                     "Service Providers"
                 ],
                 "summary": "Create a Service Provider",
-                "description": "Creates a new service provider for the authenticated user, assigning a domain and skills.",
+                "description": "Creates a new service provider for the authenticated user, assigning a domain, skills, and starting price.",
                 "operationId": "createServiceProvider",
                 "requestBody": {
                     "required": true,
@@ -2588,6 +2588,13 @@
                                         "description": "ID of the skill domain",
                                         "type": "integer",
                                         "example": 1
+                                    },
+                                    "starting_price": {
+                                        "description": "Starting price for services",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50,
+                                        "nullable": true
                                     },
                                     "skill_ids": {
                                         "description": "Array of skill IDs to associate with the provider",
@@ -2631,6 +2638,12 @@
                                                 "description": {
                                                     "type": "string",
                                                     "example": "Experienced web developer specializing in e-commerce solutions",
+                                                    "nullable": true
+                                                },
+                                                "starting_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50,
                                                     "nullable": true
                                                 },
                                                 "created_at": {
@@ -2910,7 +2923,7 @@
                     "Service Providers"
                 ],
                 "summary": "Get Service Provider by ID",
-                "description": "Retrieves a service provider by ID with its skills and pictures.",
+                "description": "Retrieves a service provider by ID with its skills, pictures, and skill domain.",
                 "operationId": "getServiceProviderById",
                 "parameters": [
                     {
@@ -2946,15 +2959,37 @@
                                                 },
                                                 "description": {
                                                     "type": "string",
-                                                    "example": "Expert in web development"
+                                                    "example": "Expert in web development",
+                                                    "nullable": true
+                                                },
+                                                "starting_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50,
+                                                    "nullable": true
                                                 },
                                                 "created_at": {
                                                     "type": "string",
+                                                    "format": "date-time",
                                                     "example": "2025-01-01T00:00:00.000000Z"
                                                 },
                                                 "updated_at": {
                                                     "type": "string",
+                                                    "format": "date-time",
                                                     "example": "2025-01-01T00:00:00.000000Z"
+                                                },
+                                                "skill_domain": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Web Development"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
                                                 "skills": {
                                                     "type": "array",
@@ -3197,14 +3232,23 @@
                                                 },
                                                 "description": {
                                                     "type": "string",
-                                                    "example": "Expert in web development"
+                                                    "example": "Expert in web development",
+                                                    "nullable": true
+                                                },
+                                                "starting_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50,
+                                                    "nullable": true
                                                 },
                                                 "created_at": {
                                                     "type": "string",
+                                                    "format": "date-time",
                                                     "example": "2025-01-01T00:00:00.000000Z"
                                                 },
                                                 "updated_at": {
                                                     "type": "string",
+                                                    "format": "date-time",
                                                     "example": "2025-01-01T00:00:00.000000Z"
                                                 },
                                                 "skill_domain": {

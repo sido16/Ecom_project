@@ -21,7 +21,7 @@ class ServiceProviderController extends Controller
     * @OA\Post(
     *     path="/api/service-providers",
     *     summary="Create a Service Provider",
-    *     description="Creates a new service provider for the authenticated user, assigning a domain and skills.",
+    *     description="Creates a new service provider for the authenticated user, assigning a domain, skills, and starting price.",
     *     operationId="createServiceProvider",
     *     tags={"Service Providers"},
     *     @OA\RequestBody(
@@ -30,6 +30,7 @@ class ServiceProviderController extends Controller
     *             type="object",
     *             @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
     *             @OA\Property(property="skill_domain_id", type="integer", example=1, description="ID of the skill domain"),
+    *             @OA\Property(property="starting_price", type="number", format="float", example=50.00, description="Starting price for services", nullable=true),
     *             @OA\Property(
     *                 property="skill_ids",
     *                 type="array",
@@ -51,6 +52,7 @@ class ServiceProviderController extends Controller
     *                 @OA\Property(property="user_id", type="integer", example=1),
     *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
     *                 @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
+    *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-11T12:00:00Z")
     *             )
@@ -85,21 +87,22 @@ class ServiceProviderController extends Controller
    {
        $request->validate([
            'description' => 'nullable|string',
-           'skill_domain_id' => 'required|exists:skill_domain,id',
+           'skill_domain_id' => 'required|exists:skill_domains,id',
+           'starting_price' => 'nullable|numeric|min:0',
            'skill_ids' => 'required|array|min:1',
            'skill_ids.*' => 'exists:skills,id',
        ]);
-
+   
        try {
            $serviceProvider = ServiceProvider::create([
                'user_id' => Auth::id(),
                'skill_domain_id' => $request->skill_domain_id,
                'description' => $request->description,
+               'starting_price' => $request->starting_price,
            ]);
-
+   
            $serviceProvider->skills()->attach($request->skill_ids);
-
-
+   
            return response()->json([
                'message' => 'Service provider created successfully',
                'data' => $serviceProvider
@@ -344,7 +347,7 @@ class ServiceProviderController extends Controller
  * @OA\Get(
  *     path="/api/service-providers/{id}",
  *     summary="Get Service Provider by ID",
- *     description="Retrieves a service provider by ID with its skills and pictures.",
+ *     description="Retrieves a service provider by ID with its skills, pictures, and skill domain.",
  *     operationId="getServiceProviderById",
  *     tags={"Service Providers"},
  *     @OA\Parameter(
@@ -363,9 +366,14 @@ class ServiceProviderController extends Controller
  *                 @OA\Property(property="id", type="integer", example=1),
  *                 @OA\Property(property="user_id", type="integer", example=1),
  *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
- *                 @OA\Property(property="description", type="string", example="Expert in web development"),
- *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="description", type="string", example="Expert in web development", nullable=true),
+ *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="skill_domain", type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="Web Development")
+ *                 ),
  *                 @OA\Property(property="skills", type="array", @OA\Items(
  *                     @OA\Property(property="id", type="integer", example=1),
  *                     @OA\Property(property="name", type="string", example="PHP")
@@ -411,7 +419,7 @@ public function show($id)
     }
 }
 
-    /**
+  /**
  * @OA\Get(
  *     path="/api/service-providers/by-user/{user_id}",
  *     summary="Get Service Provider by User ID",
@@ -434,9 +442,10 @@ public function show($id)
  *                 @OA\Property(property="id", type="integer", example=1),
  *                 @OA\Property(property="user_id", type="integer", example=1),
  *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
- *                 @OA\Property(property="description", type="string", example="Expert in web development"),
- *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="description", type="string", example="Expert in web development", nullable=true),
+ *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
  *                 @OA\Property(property="skill_domain", type="object",
  *                     @OA\Property(property="id", type="integer", example=1),
  *                     @OA\Property(property="name", type="string", example="Web Development")
