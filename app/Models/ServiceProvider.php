@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceProvider extends Model
 {
     protected $table = 'service_providers';
-    protected $fillable = ['user_id', 'description'];
+    protected $fillable = ['user_id', 'skill_domain_id', 'description', 'starting_price'];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function skillDomain()
+    {
+        return $this->belongsTo(SkillDomain::class, 'skill_domain_id');
     }
 
     public function skills()

@@ -399,7 +399,7 @@ class ServiceProviderController extends Controller
 public function show($id)
 {
     try {
-        $serviceProvider = ServiceProvider::with(['skills', 'pictures'])->findOrFail($id);
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain'])->findOrFail($id);
         return response()->json(['data' => $serviceProvider], 200);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json(['message' => 'Service provider not found'], 404);
@@ -410,6 +410,83 @@ public function show($id)
         ], 500);
     }
 }
+
+    /**
+ * @OA\Get(
+ *     path="/api/service-providers/by-user/{user_id}",
+ *     summary="Get Service Provider by User ID",
+ *     description="Retrieves a service provider by user ID with its skills, pictures, and skill domain.",
+ *     operationId="getServiceProviderByUserId",
+ *     tags={"Service Providers"},
+ *     @OA\Parameter(
+ *         name="user_id",
+ *         in="path",
+ *         description="ID of the user",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Service provider retrieved successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
+ *                 @OA\Property(property="description", type="string", example="Expert in web development"),
+ *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="skill_domain", type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="Web Development")
+ *                 ),
+ *                 @OA\Property(property="skills", type="array", @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="PHP")
+ *                 )),
+ *                 @OA\Property(property="pictures", type="array", @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="service_provider_id", type="integer", example=1),
+ *                     @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
+ *                 ))
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Service provider not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Service provider not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to retrieve service provider"),
+ *             @OA\Property(property="error", type="string", example="Database error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+    public function showByUser($user_id)
+    {
+        try {
+            $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain'])
+                ->where('user_id', $user_id)
+                ->firstOrFail();
+            return response()->json(['data' => $serviceProvider], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Service provider not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve service provider',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
 
      
 

@@ -10,8 +10,11 @@ class CreateServiceProvidersTable extends Migration
         Schema::create('service_providers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('skill_domain_id');
             $table->text('description')->nullable();
+            $table->decimal('starting_price', 8, 2)->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('skill_domain_id')->references('id')->on('skill_domains')->onDelete('cascade');
             $table->timestamps();
         });
     }

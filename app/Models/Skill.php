@@ -7,12 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Skill extends Model
 {
     protected $table = 'skills';
-    protected $fillable = ['name', 'domain_id'];
-
-    public function domain()
-    {
-        return $this->belongsTo(SkillDomain::class, 'domain_id');
-    }
+    protected $fillable = ['name'];
 
     public function serviceProviders()
     {

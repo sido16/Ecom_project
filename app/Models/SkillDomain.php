@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class SkillDomain extends Model
 {
-    protected $table = 'skill_domain';
+    protected $table = 'skill_domains';
     protected $fillable = ['name'];
 
-    public function skills()
+
+    public function serviceProviders()
     {
-        return $this->hasMany(Skill::class, 'domain_id');
+        return $this->hasMany(ServiceProvider::class, 'skill_domain_id');
     }
 }
 ?>

@@ -93,7 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/projects', [ProjectController::class, 'store']);
         Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
         Route::get('/{id}', [ServiceProviderController::class, 'show'])->whereNumber('id');
-
+        Route::get('/by-user/{user_id}', [ServiceProviderController::class, 'showByUser'])->whereNumber('user_id');
     });
 
 
