@@ -498,11 +498,11 @@ public function show($id)
     }
 
 
-        /**
+    /**
      * @OA\Get(
      *     path="/api/service-providers",
      *     summary="Get All Service Providers",
-     *     description="Retrieves a list of all service providers with their skills, pictures, and skill domain.",
+     *     description="Retrieves a list of all service providers with their user's full name, skills, pictures, and skill domain.",
      *     operationId="getAllServiceProviders",
      *     tags={"Service Providers"},
      *     @OA\Response(
@@ -522,6 +522,12 @@ public function show($id)
      *                     @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
      *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
      *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(
+     *                         property="user",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="full_name", type="string", example="John Doe")
+     *                     ),
      *                     @OA\Property(
      *                         property="skill_domain",
      *                         type="object",
@@ -563,7 +569,11 @@ public function show($id)
     public function index()
     {
         try {
-            $serviceProviders = ServiceProvider::with(['skills', 'pictures', 'skillDomain'])->get();
+            $serviceProviders = ServiceProvider::with(['user', 'skills', 'pictures', 'skillDomain'])->get()->map(function ($provider) {
+                $providerData = $provider->toArray();
+                $providerData['user'] = $provider->user ? ['full_name' => $provider->user->full_name] : null;
+                return $providerData;
+            });
             return response()->json(['data' => $serviceProviders], 200);
         } catch (\Exception $e) {
             return response()->json([

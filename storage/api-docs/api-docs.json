@@ -2765,7 +2765,7 @@
                     "Service Providers"
                 ],
                 "summary": "Get All Service Providers",
-                "description": "Retrieves a list of all service providers with their skills, pictures, and skill domain.",
+                "description": "Retrieves a list of all service providers with their user's full name, skills, pictures, and skill domain.",
                 "operationId": "getAllServiceProviders",
                 "responses": {
                     "200": {
@@ -2810,6 +2810,16 @@
                                                         "type": "string",
                                                         "format": "date-time",
                                                         "example": "2025-01-01T00:00:00.000000Z"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "John Doe"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
                                                     },
                                                     "skill_domain": {
                                                         "properties": {
