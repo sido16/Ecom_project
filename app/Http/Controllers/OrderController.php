@@ -31,16 +31,19 @@ class OrderController extends Controller
             ]);
         }
 
+        // Vérifier si le produit existe déjà dans le panier
         $existingOrderProduct = OrderProduct::where('order_id', $cart->id)
             ->where('product_id', $product->id)
             ->first();
 
         if ($existingOrderProduct) {
+            // Remplacer la quantité existante
             $existingOrderProduct->update([
                 'quantity' => $validated['quantity'],
             ]);
             Log::info("Quantité remplacée pour product_id={$product->id}, nouvelle quantité={$validated['quantity']}");
         } else {
+            // Créer un nouvel enregistrement
             $orderProduct = OrderProduct::create([
                 'order_id' => $cart->id,
                 'product_id' => $product->id,
@@ -51,6 +54,7 @@ class OrderController extends Controller
             Log::info("Nouveau produit ajouté au panier: product_id={$product->id}, quantity={$validated['quantity']}");
         }
 
+        // Mettre à jour le total_amount
         $cart->update([
             'total_amount' => $cart->orderProducts->sum(fn($item) => $item->quantity * $item->unit_price),
         ]);
@@ -67,9 +71,16 @@ class OrderController extends Controller
                 ->with(['orderProducts.product.pictures'])
                 ->first();
 
+            // Si aucun panier n'existe, retourner un panier vide
             if (!$cart) {
-                Log::info('getCart: Aucun panier trouvé pour user_id=' . $user->id);
-                return response()->json(['message' => 'Cart not found'], 404);
+                Log::info('getCart: Aucun panier trouvé pour user_id=' . $user->id . ', renvoi d\'un panier vide');
+                return response()->json([
+                    'data' => [
+                        'id' => null,
+                        'total_price' => 0,
+                        'items' => [],
+                    ],
+                ]);
             }
 
             $cartData = [
@@ -113,7 +124,6 @@ class OrderController extends Controller
             $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
 
             if (!$cart) {
-                Log::info('removeFromCart: Aucun panier trouvé pour user_id=' . $user->id);
                 return response()->json(['message' => 'Cart not found'], 404);
             }
 
@@ -122,10 +132,6 @@ class OrderController extends Controller
                 ->first();
 
             if (!$orderProduct) {
-                Log::warning('removeFromCart: Article non trouvé dans le panier', [
-                    'itemId' => $itemId,
-                    'order_id' => $cart->id,
-                ]);
                 return response()->json(['message' => 'Item not found in cart'], 404);
             }
 
@@ -157,7 +163,6 @@ class OrderController extends Controller
             $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
 
             if (!$cart) {
-                Log::info('updateCartItem: Aucun panier trouvé pour user_id=' . $user->id);
                 return response()->json(['message' => 'Cart not found'], 404);
             }
 
@@ -166,10 +171,6 @@ class OrderController extends Controller
                 ->first();
 
             if (!$orderProduct) {
-                Log::warning('updateCartItem: Article non trouvé dans le panier', [
-                    'itemId' => $itemId,
-                    'order_id' => $cart->id,
-                ]);
                 return response()->json(['message' => 'Item not found in cart'], 404);
             }
 
@@ -197,18 +198,12 @@ class OrderController extends Controller
             $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
 
             if (!$cart) {
-                Log::info('validateCart: Aucun panier trouvé pour user_id=' . $user->id);
                 return response()->json(['message' => 'Cart not found'], 404);
             }
 
             foreach ($cart->orderProducts as $orderProduct) {
                 $product = Product::find($orderProduct->product_id);
                 if (!$product || $product->quantity < $orderProduct->quantity) {
-                    Log::warning('validateCart: Produit non disponible ou quantité insuffisante', [
-                        'product_id' => $orderProduct->product_id,
-                        'requested_quantity' => $orderProduct->quantity,
-                        'available_quantity' => $product ? $product->quantity : 0,
-                    ]);
                     return response()->json(['message' => 'Produit non disponible ou quantité insuffisante'], 400);
                 }
             }
