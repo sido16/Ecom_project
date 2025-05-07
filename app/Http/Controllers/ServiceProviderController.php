@@ -118,100 +118,100 @@ class ServiceProviderController extends Controller
    
     
     /**
-     * @OA\Post(
-     *     path="/api/service-providers/{id}/pictures",
-     *     summary="Upload Pictures for a Service Provider",
-     *     description="Uploads a list of images for a service provider, stores them locally, and saves their paths in the service_provider_pictures table.",
-     *     operationId="uploadServiceProviderPictures",
-     *     tags={"Service Providers"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="The ID of the service provider to associate the pictures with",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 type="object",
-     *                 @OA\Property(
-     *                     property="pictures",
-     *                     type="array",
-     *                     @OA\Items(type="string", format="binary"),
-     *                     description="Array of image files to upload"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Pictures uploaded successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", example="Pictures uploaded successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="user_id", type="integer", example=1),
-     *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
-     *                 @OA\Property(property="description", type="string", example="Experienced web developer", nullable=true),
-     *                 @OA\Property(
-     *                     property="pictures",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="service_provider_id", type="integer", example=1),
-     *                         @OA\Property(property="picture", type="string", example="/storage/service_provider_pictures/image1.jpg")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Forbidden",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Not authorized to upload pictures for this service provider")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Service provider not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Service provider not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The pictures field is required"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Failed to upload pictures"),
-     *             @OA\Property(property="error", type="string", example="Database or storage error")
-     *         )
-     *     ),
-     *     security={{"sanctum": {}}}
-     * )
-     */
+ * @OA\Post(
+ *     path="/api/service-providers/portfolio/pictures/{id}",
+ *     summary="Upload Pictures for a Service Provider",
+ *     description="Uploads a list of images for a service provider's portfolio, stores them locally, and saves their paths in the service_provider_pictures table.",
+ *     operationId="uploadServiceProviderPictures",
+ *     tags={"Portfolio"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="The ID of the service provider to associate the pictures with",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="pictures",
+ *                     type="array",
+ *                     @OA\Items(type="string", format="binary"),
+ *                     description="Array of image files to upload"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Pictures uploaded successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Pictures uploaded successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
+ *                 @OA\Property(property="description", type="string", example="Experienced web developer", nullable=true),
+ *                 @OA\Property(
+ *                     property="pictures",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="service_provider_id", type="integer", example=1),
+ *                         @OA\Property(property="picture", type="string", example="/storage/service_provider_pictures/image1.jpg")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Forbidden",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Not authorized to upload pictures for this service provider")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Service provider not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Service provider not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The pictures field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to upload pictures"),
+ *             @OA\Property(property="error", type="string", example="Database or storage error")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
     public function uploadPictures(Request $request, $id)
     {
         // Validate the service provider exists and belongs to the authenticated user
@@ -343,17 +343,136 @@ class ServiceProviderController extends Controller
         }
     }
 
-    /**
+      /**
+     * @OA\Get(
+     *     path="/api/service-providers/{id}",
+     *     summary="Get Service Provider by ID",
+     *     description="Retrieves a service provider by ID with its user's full name, skills, pictures, and skill domain.",
+     *     operationId="getServiceProviderById",
+     *     tags={"Service Providers"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the service provider",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Service provider retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="skill_domain_id", type="integer", example=4),
+     *                 @OA\Property(property="description", type="string", example="Updated web developer profile", nullable=true),
+     *                 @OA\Property(property="starting_price", type="string", example="75.00", nullable=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:31:04.000000Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-06T09:28:56.000000Z"),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="full_name", type="string", example="Hadj Ben"),
+     *                     @OA\Property(property="email", type="string", example="hadj@gmail.com"),
+     *                     @OA\Property(property="phone_number", type="string", example="0555123456", nullable=true),
+     *                     @OA\Property(property="role", type="string", example="user"),
+     *                     @OA\Property(property="picture", type="string", example=null, nullable=true),
+     *                     @OA\Property(property="address", type="string", example="123 Algiers St, Algiers, Algeria", nullable=true),
+     *                     @OA\Property(property="city", type="string", example=null, nullable=true),
+     *                     @OA\Property(property="email_verified_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z", nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="skill_domain",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=4),
+     *                     @OA\Property(property="name", type="string", example="Content Creation"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="skills",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="UI/UX Design"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+     *                         @OA\Property(
+     *                             property="pivot",
+     *                             type="object",
+     *                             @OA\Property(property="service_provider_id", type="integer", example=1),
+     *                             @OA\Property(property="skill_id", type="integer", example=1)
+     *                         )
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="pictures",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="service_provider_id", type="integer", example=1),
+     *                         @OA\Property(property="picture", type="string", example="service_provider_pictures/0qlYO4DTdp7JrD4rCVakwvnNvQEXTcQkCpc1Lz54.jpg"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:33:07.000000Z"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:33:07.000000Z")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Service provider not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Service provider not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve service provider"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+public function show($id)
+{
+    try {
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain','user'])->findOrFail($id);
+        return response()->json(['data' => $serviceProvider], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['message' => 'Service provider not found'], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to retrieve service provider',
+            'error' => 'Database error occurred'
+        ], 500);
+    }
+}
+
+
+/**
  * @OA\Get(
- *     path="/api/service-providers/{id}",
- *     summary="Get Service Provider by ID",
- *     description="Retrieves a service provider by ID with its user's full name, skills, pictures, and skill domain.",
- *     operationId="getServiceProviderById",
+ *     path="/api/service-providers/by-user/{user_id}",
+ *     summary="Get Service Provider by User ID",
+ *     description="Retrieves a service provider by user ID with its user's full name and picture, skills, pictures, and skill domain.",
+ *     operationId="getServiceProviderByUserId",
  *     tags={"Service Providers"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="user_id",
  *         in="path",
- *         description="ID of the service provider",
+ *         description="ID of the user associated with the service provider",
  *         required=true,
  *         @OA\Schema(type="integer")
  *     ),
@@ -365,40 +484,55 @@ class ServiceProviderController extends Controller
  *             @OA\Property(
  *                 property="data",
  *                 type="object",
- *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="id", type="integer", example=2),
  *                 @OA\Property(property="user_id", type="integer", example=1),
  *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
- *                 @OA\Property(property="description", type="string", example="Expert in web development", nullable=true),
- *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
- *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
+ *                 @OA\Property(property="description", type="string", example="Experienced web developer", nullable=true),
+ *                 @OA\Property(property="starting_price", type="string", example="100.00", nullable=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-07T09:33:56.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-07T09:33:56.000000Z"),
  *                 @OA\Property(
  *                     property="user",
  *                     type="object",
  *                     nullable=true,
- *                     @OA\Property(property="full_name", type="string", example="John Doe")
+ *                     @OA\Property(property="full_name", type="string", example="Hadj Ben"),
+ *                     @OA\Property(property="picture", type="string", example=null, nullable=true)
  *                 ),
  *                 @OA\Property(
  *                     property="skill_domain",
  *                     type="object",
  *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="name", type="string", example="Web Development")
+ *                     @OA\Property(property="name", type="string", example="Design"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z")
  *                 ),
  *                 @OA\Property(
  *                     property="skills",
  *                     type="array",
  *                     @OA\Items(
+ *                         type="object",
  *                         @OA\Property(property="id", type="integer", example=1),
- *                         @OA\Property(property="name", type="string", example="PHP")
+ *                         @OA\Property(property="name", type="string", example="UI/UX Design"),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-05T09:30:30.000000Z"),
+ *                         @OA\Property(
+ *                             property="pivot",
+ *                             type="object",
+ *                             @OA\Property(property="service_provider_id", type="integer", example=2),
+ *                             @OA\Property(property="skill_id", type="integer", example=1)
+ *                         )
  *                     )
  *                 ),
  *                 @OA\Property(
  *                     property="pictures",
  *                     type="array",
  *                     @OA\Items(
- *                         @OA\Property(property="id", type="integer", example=1),
- *                         @OA\Property(property="service_provider_id", type="integer", example=1),
- *                         @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=3),
+ *                         @OA\Property(property="service_provider_id", type="integer", example=2),
+ *                         @OA\Property(property="picture", type="string", example="service_provider_pictures/jgjpotxIBdZ8kbyMDULtlfdFUlpjnHtucWY426Jg.jpg"),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z")
  *                     )
  *                 )
  *             )
@@ -422,11 +556,19 @@ class ServiceProviderController extends Controller
  *     security={{"sanctum": {}}}
  * )
  */
-public function show($id)
+
+public function showByUser($user_id)
 {
     try {
-        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain','user'])->findOrFail($id);
-        return response()->json(['data' => $serviceProvider], 200);
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures', 'skillDomain', 'user'])
+            ->where('user_id', $user_id)
+            ->firstOrFail();
+        $serviceProviderData = $serviceProvider->toArray();
+        $serviceProviderData['user'] = $serviceProvider->user ? [
+            'full_name' => $serviceProvider->user->full_name,
+            'picture' => $serviceProvider->user->picture
+        ] : null;
+        return response()->json(['data' => $serviceProviderData], 200);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json(['message' => 'Service provider not found'], 404);
     } catch (\Exception $e) {
@@ -436,84 +578,6 @@ public function show($id)
         ], 500);
     }
 }
-
-  /**
- * @OA\Get(
- *     path="/api/service-providers/by-user/{user_id}",
- *     summary="Get Service Provider by User ID",
- *     description="Retrieves a service provider by user ID with its skills, pictures, and skill domain.",
- *     operationId="getServiceProviderByUserId",
- *     tags={"Service Providers"},
- *     @OA\Parameter(
- *         name="user_id",
- *         in="path",
- *         description="ID of the user",
- *         required=true,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Service provider retrieved successfully",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="user_id", type="integer", example=1),
- *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
- *                 @OA\Property(property="description", type="string", example="Expert in web development", nullable=true),
- *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
- *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="skill_domain", type="object",
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="name", type="string", example="Web Development")
- *                 ),
- *                 @OA\Property(property="skills", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="name", type="string", example="PHP")
- *                 )),
- *                 @OA\Property(property="pictures", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="service_provider_id", type="integer", example=1),
- *                     @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
- *                 ))
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Service provider not found",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Service provider not found")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Server error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Failed to retrieve service provider"),
- *             @OA\Property(property="error", type="string", example="Database error occurred")
- *         )
- *     ),
- *     security={{"sanctum": {}}}
- * )
- */
-    public function showByUser($user_id)
-    {
-        try {
-            $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain'])
-                ->where('user_id', $user_id)
-                ->firstOrFail();
-            return response()->json(['data' => $serviceProvider], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Service provider not found'], 404);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to retrieve service provider',
-                'error' => 'Database error occurred'
-            ], 500);
-        }
-    }
 
 
     /**

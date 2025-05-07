@@ -94,17 +94,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ServiceProviderController::class, 'store']);
         Route::get('/', [ServiceProviderController::class, 'index']);
         Route::put('/{id}', [ServiceProviderController::class, 'update'])->whereNumber('id');
-        Route::post('/{id}/pictures', [ServiceProviderController::class, 'uploadPictures']);
-        Route::post('/{id}/projects', [ProjectController::class, 'store']);
+        Route::post('/{id}/portfolio/pictures', [ServiceProviderController::class, 'uploadPictures']);
+        Route::post('/{id}/portfolio/projects', [ProjectController::class, 'store']);
         Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
         Route::get('/{id}', [ServiceProviderController::class, 'show'])->whereNumber('id');
         Route::get('/by-user/{user_id}', [ServiceProviderController::class, 'showByUser'])->whereNumber('user_id');
+        Route::delete('/portfolio/projects/{id}', [ProjectController::class, 'destroy']);
     });
 
 
 
     //service_providers_projects
-    Route::delete('projects/{id}', [ProjectController::class, 'destroy']);
+    
 
 
 

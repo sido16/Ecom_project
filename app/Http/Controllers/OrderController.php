@@ -278,7 +278,7 @@ public function getCart(Request $request)
     try {
         $user = Auth::user();
         $cart = Order::where('user_id', $user->id)
-            ->where('is_validated', 'false')
+            ->where('is_validated', false)
             ->with(['orderProducts.product.pictures'])
             ->first();
 

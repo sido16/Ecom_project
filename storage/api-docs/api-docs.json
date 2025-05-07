@@ -2438,10 +2438,10 @@
                 ]
             }
         },
-        "/api/service-providers/{serviceProvider}/projects": {
+        "/api/service_providers/{serviceProvider}/portfolio/projects": {
             "post": {
                 "tags": [
-                    "Projects"
+                    "Portfolio"
                 ],
                 "summary": "Create a Project with Pictures",
                 "description": "Creates a new project for a specified service provider owned by the authenticated user, with optional image uploads stored locally in the project_pictures table.",
@@ -2647,10 +2647,10 @@
                 ]
             }
         },
-        "/api/projects/{id}": {
+        "/api/service_providers/portfolio/projects/{id}": {
             "delete": {
                 "tags": [
-                    "Projects"
+                    "Portfolio"
                 ],
                 "summary": "Delete a Project",
                 "description": "Deletes a project and its associated pictures for the authenticated user, if they own the associated service provider.",
@@ -3065,13 +3065,13 @@
                 ]
             }
         },
-        "/api/service-providers/{id}/pictures": {
+        "/api/service-providers/portfolio/pictures/{id}": {
             "post": {
                 "tags": [
-                    "Service Providers"
+                    "Portfolio"
                 ],
                 "summary": "Upload Pictures for a Service Provider",
-                "description": "Uploads a list of images for a service provider, stores them locally, and saves their paths in the service_provider_pictures table.",
+                "description": "Uploads a list of images for a service provider's portfolio, stores them locally, and saves their paths in the service_provider_pictures table.",
                 "operationId": "uploadServiceProviderPictures",
                 "parameters": [
                     {
@@ -3296,34 +3296,81 @@
                                                 },
                                                 "skill_domain_id": {
                                                     "type": "integer",
-                                                    "example": 1
+                                                    "example": 4
                                                 },
                                                 "description": {
                                                     "type": "string",
-                                                    "example": "Expert in web development",
+                                                    "example": "Updated web developer profile",
                                                     "nullable": true
                                                 },
                                                 "starting_price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50,
+                                                    "type": "string",
+                                                    "example": "75.00",
                                                     "nullable": true
                                                 },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-01-01T00:00:00.000000Z"
+                                                    "example": "2025-05-05T09:31:04.000000Z"
                                                 },
                                                 "updated_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-01-01T00:00:00.000000Z"
+                                                    "example": "2025-05-06T09:28:56.000000Z"
                                                 },
                                                 "user": {
                                                     "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
                                                         "full_name": {
                                                             "type": "string",
-                                                            "example": "John Doe"
+                                                            "example": "Hadj Ben"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "hadj@gmail.com"
+                                                        },
+                                                        "phone_number": {
+                                                            "type": "string",
+                                                            "example": "0555123456",
+                                                            "nullable": true
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "user"
+                                                        },
+                                                        "picture": {
+                                                            "type": "string",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "address": {
+                                                            "type": "string",
+                                                            "example": "123 Algiers St, Algiers, Algeria",
+                                                            "nullable": true
+                                                        },
+                                                        "city": {
+                                                            "type": "string",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "email_verified_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z",
+                                                            "nullable": true
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
                                                         }
                                                     },
                                                     "type": "object",
@@ -3333,11 +3380,21 @@
                                                     "properties": {
                                                         "id": {
                                                             "type": "integer",
-                                                            "example": 1
+                                                            "example": 4
                                                         },
                                                         "name": {
                                                             "type": "string",
-                                                            "example": "Web Development"
+                                                            "example": "Content Creation"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
                                                         }
                                                     },
                                                     "type": "object"
@@ -3352,7 +3409,30 @@
                                                             },
                                                             "name": {
                                                                 "type": "string",
-                                                                "example": "PHP"
+                                                                "example": "UI/UX Design"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:30:30.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:30:30.000000Z"
+                                                            },
+                                                            "pivot": {
+                                                                "properties": {
+                                                                    "service_provider_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "skill_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    }
+                                                                },
+                                                                "type": "object"
                                                             }
                                                         },
                                                         "type": "object"
@@ -3372,7 +3452,17 @@
                                                             },
                                                             "picture": {
                                                                 "type": "string",
-                                                                "example": "/storage/pictures/sp1.jpg"
+                                                                "example": "service_provider_pictures/0qlYO4DTdp7JrD4rCVakwvnNvQEXTcQkCpc1Lz54.jpg"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:33:07.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:33:07.000000Z"
                                                             }
                                                         },
                                                         "type": "object"
@@ -3751,13 +3841,13 @@
                     "Service Providers"
                 ],
                 "summary": "Get Service Provider by User ID",
-                "description": "Retrieves a service provider by user ID with its skills, pictures, and skill domain.",
+                "description": "Retrieves a service provider by user ID with its user's full name and picture, skills, pictures, and skill domain.",
                 "operationId": "getServiceProviderByUserId",
                 "parameters": [
                     {
                         "name": "user_id",
                         "in": "path",
-                        "description": "ID of the user",
+                        "description": "ID of the user associated with the service provider",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -3775,7 +3865,7 @@
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 1
+                                                    "example": 2
                                                 },
                                                 "user_id": {
                                                     "type": "integer",
@@ -3787,24 +3877,38 @@
                                                 },
                                                 "description": {
                                                     "type": "string",
-                                                    "example": "Expert in web development",
+                                                    "example": "Experienced web developer",
                                                     "nullable": true
                                                 },
                                                 "starting_price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50,
+                                                    "type": "string",
+                                                    "example": "100.00",
                                                     "nullable": true
                                                 },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-01-01T00:00:00.000000Z"
+                                                    "example": "2025-05-07T09:33:56.000000Z"
                                                 },
                                                 "updated_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-01-01T00:00:00.000000Z"
+                                                    "example": "2025-05-07T09:33:56.000000Z"
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "Hadj Ben"
+                                                        },
+                                                        "picture": {
+                                                            "type": "string",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
                                                 },
                                                 "skill_domain": {
                                                     "properties": {
@@ -3814,7 +3918,17 @@
                                                         },
                                                         "name": {
                                                             "type": "string",
-                                                            "example": "Web Development"
+                                                            "example": "Design"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-05T09:30:30.000000Z"
                                                         }
                                                     },
                                                     "type": "object"
@@ -3829,7 +3943,30 @@
                                                             },
                                                             "name": {
                                                                 "type": "string",
-                                                                "example": "PHP"
+                                                                "example": "UI/UX Design"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:30:30.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-05T09:30:30.000000Z"
+                                                            },
+                                                            "pivot": {
+                                                                "properties": {
+                                                                    "service_provider_id": {
+                                                                        "type": "integer",
+                                                                        "example": 2
+                                                                    },
+                                                                    "skill_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    }
+                                                                },
+                                                                "type": "object"
                                                             }
                                                         },
                                                         "type": "object"
@@ -3841,15 +3978,25 @@
                                                         "properties": {
                                                             "id": {
                                                                 "type": "integer",
-                                                                "example": 1
+                                                                "example": 3
                                                             },
                                                             "service_provider_id": {
                                                                 "type": "integer",
-                                                                "example": 1
+                                                                "example": 2
                                                             },
                                                             "picture": {
                                                                 "type": "string",
-                                                                "example": "/storage/pictures/sp1.jpg"
+                                                                "example": "service_provider_pictures/jgjpotxIBdZ8kbyMDULtlfdFUlpjnHtucWY426Jg.jpg"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-07T09:37:21.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-07T09:37:21.000000Z"
                                                             }
                                                         },
                                                         "type": "object"
@@ -5060,8 +5207,8 @@
             "description": "Products"
         },
         {
-            "name": "Projects",
-            "description": "Projects"
+            "name": "Portfolio",
+            "description": "Portfolio"
         },
         {
             "name": "Service Providers",
