@@ -347,7 +347,7 @@ class ServiceProviderController extends Controller
  * @OA\Get(
  *     path="/api/service-providers/{id}",
  *     summary="Get Service Provider by ID",
- *     description="Retrieves a service provider by ID with its skills, pictures, and skill domain.",
+ *     description="Retrieves a service provider by ID with its user's full name, skills, pictures, and skill domain.",
  *     operationId="getServiceProviderById",
  *     tags={"Service Providers"},
  *     @OA\Parameter(
@@ -362,7 +362,9 @@ class ServiceProviderController extends Controller
  *         description="Service provider retrieved successfully",
  *         @OA\JsonContent(
  *             type="object",
- *             @OA\Property(property="data", type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
  *                 @OA\Property(property="id", type="integer", example=1),
  *                 @OA\Property(property="user_id", type="integer", example=1),
  *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
@@ -370,19 +372,35 @@ class ServiceProviderController extends Controller
  *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
  *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
  *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00.000000Z"),
- *                 @OA\Property(property="skill_domain", type="object",
+ *                 @OA\Property(
+ *                     property="user",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="full_name", type="string", example="John Doe")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="skill_domain",
+ *                     type="object",
  *                     @OA\Property(property="id", type="integer", example=1),
  *                     @OA\Property(property="name", type="string", example="Web Development")
  *                 ),
- *                 @OA\Property(property="skills", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="name", type="string", example="PHP")
- *                 )),
- *                 @OA\Property(property="pictures", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="service_provider_id", type="integer", example=1),
- *                     @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
- *                 ))
+ *                 @OA\Property(
+ *                     property="skills",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="name", type="string", example="PHP")
+ *                     )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="pictures",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="service_provider_id", type="integer", example=1),
+ *                         @OA\Property(property="picture", type="string", example="/storage/pictures/sp1.jpg")
+ *                     )
+ *                 )
  *             )
  *         )
  *     ),
@@ -407,7 +425,7 @@ class ServiceProviderController extends Controller
 public function show($id)
 {
     try {
-        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain'])->findOrFail($id);
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain','user'])->findOrFail($id);
         return response()->json(['data' => $serviceProvider], 200);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json(['message' => 'Service provider not found'], 404);

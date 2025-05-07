@@ -3264,7 +3264,7 @@
                     "Service Providers"
                 ],
                 "summary": "Get Service Provider by ID",
-                "description": "Retrieves a service provider by ID with its skills, pictures, and skill domain.",
+                "description": "Retrieves a service provider by ID with its user's full name, skills, pictures, and skill domain.",
                 "operationId": "getServiceProviderById",
                 "parameters": [
                     {
@@ -3318,6 +3318,16 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2025-01-01T00:00:00.000000Z"
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
                                                 },
                                                 "skill_domain": {
                                                     "properties": {
