@@ -7,461 +7,222 @@ use App\Models\OrderProduct;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 
 class OrderController extends Controller
 {
-    /**
-     * @OA\Post(
-     *     path="/api/orders/buy-now",
-     *     summary="Buy Now",
-     *     description="Creates a validated order immediately for a single product, bypassing the cart.",
-     *     operationId="buyNow",
-     *     tags={"Orders"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="product_id", type="integer", description="The ID of the product to purchase", example=1),
-     *             @OA\Property(property="quantity", type="integer", description="The quantity to purchase", example=2)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Order created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Order created successfully"),
-     *             @OA\Property(property="order_id", type="integer", example=1)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Product not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The product_id field is required"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
-     */
-    public function buyNow(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
-        $product = Product::findOrFail($request->product_id);
-
-        return DB::transaction(function () use ($request, $product) {
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'status' => 'pending',
-                'total_amount' => $product->price * $request->quantity,
-                'is_validated' => true,
-            ]);
-
-            OrderProduct::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'supplier_id' => $product->supplier_id,
-                'quantity' => $request->quantity,
-                'unit_price' => $product->price,
-            ]);
-
-            $product->decrement('quantity', $request->quantity);
-
-            return response()->json(['message' => 'Order created successfully', 'order_id' => $order->id], 201);
-        });
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/orders/add-to-cart",
-     *     summary="Add to Cart",
-     *     description="Adds a product to an unvalidated order (cart). If an unvalidated order exists, adds the product to it; otherwise, creates a new order.",
-     *     operationId="addToCart",
-     *     tags={"Orders"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="product_id", type="integer", description="The ID of the product to add", example=1),
-     *             @OA\Property(property="quantity", type="integer", description="The quantity to add", example=2)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Product added to cart",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product added to cart"),
-     *             @OA\Property(property="order_id", type="integer", example=1)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Product not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The product_id field is required"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
-     */
     public function addToCart(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
-
-        return DB::transaction(function () use ($request, $product) {
-            $order = Order::where('user_id', Auth::id())
-                ->where('is_validated', false)
-                ->first();
-
-            if (!$order) {
-                $order = Order::create([
-                    'user_id' => Auth::id(),
-                    'status' => 'pending',
-                    'total_amount' => $product->price * $request->quantity,
-                    'is_validated' => false,
-                ]);
-            } else {
-                $order->total_amount += $product->price * $request->quantity;
-                $order->save();
-            }
-
-            $orderProduct = OrderProduct::where('order_id', $order->id)
-                ->where('product_id', $product->id)
-                ->first();
-
-            if ($orderProduct) {
-                $orderProduct->quantity += $request->quantity;
-                $orderProduct->save();
-            } else {
-                OrderProduct::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'supplier_id' => $product->supplier_id,
-                    'quantity' => $request->quantity,
-                    'unit_price' => $product->price,
-                ]);
-            }
-
-            return response()->json(['message' => 'Product added to cart', 'order_id' => $order->id], 201);
-        });
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/orders/{orderId}/validate",
-     *     summary="Validate Cart",
-     *     description="Validates an unvalidated cart (order) by setting it to validated and updating its status to processing.",
-     *     operationId="validateCart",
-     *     tags={"Orders"},
-     *     @OA\Parameter(
-     *         name="orderId",
-     *         in="path",
-     *         required=true,
-     *         description="The ID of the order to validate",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Cart validated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Cart validated successfully"),
-     *             @OA\Property(property="order_id", type="integer", example=1)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Order not found or not eligible for validation",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Order not found")
-     *         )
-     *     )
-     * )
-     */
-    public function validateCart(Request $request, $orderId)
-    {
-        $order = Order::where('id', $orderId)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
-         if (!$order) {
-                return response()->json(['message' => 'Order not found'], 404);
-            }
-    
-        if ($order->is_validated) {
-                return response()->json(['message' => 'Order already validated', 'order_id' => $order->id], 200);
-            }
-        return DB::transaction(function () use ($order) {
-            $order->update([
-                'is_validated' => true,
-                'status' => 'processing',
-            ]);
-
-            return response()->json(['message' => 'Cart validated successfully', 'order_id' => $order->id], 200);
-        });
-    }
-
-    
-    /**
- * @OA\Get(
- *     path="/api/orders/cart",
- *     summary="Get User Cart",
- *     description="Retrieves the authenticated user's current cart with items.",
- *     operationId="getUserCart",
- *     tags={"Cart"},
- *     @OA\Response(
- *         response=200,
- *         description="Cart retrieved successfully",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="total_price", type="number", example=35.00),
- *                 @OA\Property(property="items", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="product_id", type="integer", example=1),
- *                     @OA\Property(property="quantity", type="integer", example=2),
- *                     @OA\Property(property="price", type="number", example=10.00),
- *                     @OA\Property(property="product", type="object",
- *                         @OA\Property(property="id", type="integer", example=1),
- *                         @OA\Property(property="name", type="string", example="Red T-shirt"),
- *                         @OA\Property(property="pictures", type="array", @OA\Items(
- *                             @OA\Property(property="id", type="integer", example=1),
- *                             @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg")
- *                         ))
- *                     )
- *                 ))
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Cart not found",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Cart not found")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Server error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Failed to retrieve cart"),
- *             @OA\Property(property="error", type="string", example="Database error occurred")
- *         )
- *     ),
- *     security={{"sanctum": {}}}
- * )
- */
-public function getCart(Request $request)
-{
-    try {
+        $product = Product::findOrFail($validated['product_id']);
         $user = Auth::user();
-        $cart = Order::where('user_id', $user->id)
-            ->where('is_validated', 'false')
-            ->with(['orderProducts.product.pictures'])
-            ->first();
+        $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
 
         if (!$cart) {
-            return response()->json([
-                'message' => 'Cart not found'
-            ], 404);
+            Log::info('Création d\'un nouveau panier pour user_id=' . $user->id);
+            $cart = Order::create([
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total_amount' => 0,
+            ]);
         }
 
-        return response()->json(['data' => $cart], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Failed to retrieve cart',
-            'error' => 'Database error occurred'
-        ], 500);
+        $existingOrderProduct = OrderProduct::where('order_id', $cart->id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($existingOrderProduct) {
+            $existingOrderProduct->update([
+                'quantity' => $validated['quantity'],
+            ]);
+            Log::info("Quantité remplacée pour product_id={$product->id}, nouvelle quantité={$validated['quantity']}");
+        } else {
+            $orderProduct = OrderProduct::create([
+                'order_id' => $cart->id,
+                'product_id' => $product->id,
+                'supplier_id' => $product->supplier_id,
+                'quantity' => $validated['quantity'],
+                'unit_price' => $product->price ?? 0,
+            ]);
+            Log::info("Nouveau produit ajouté au panier: product_id={$product->id}, quantity={$validated['quantity']}");
+        }
+
+        $cart->update([
+            'total_amount' => $cart->orderProducts->sum(fn($item) => $item->quantity * $item->unit_price),
+        ]);
+
+        return response()->json(['message' => 'Product added to cart', 'order_id' => $cart->id]);
     }
-}
 
-/**
- * @OA\Put(
- *     path="/api/orders/cart/update",
- *     summary="Update Product Quantity in Cart",
- *     description="Updates the quantity of a product in the authenticated user's cart.",
- *     operationId="updateCartProduct",
- *     tags={"Cart"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="product_id", type="integer", example=1, description="ID of the product"),
- *             @OA\Property(property="quantity", type="integer", example=3, description="New quantity for the product")
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Product quantity updated successfully",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Product quantity updated"),
- *             @OA\Property(property="order_id", type="integer", example=1)
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Cart or product not found",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Cart or product not found")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Validation error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="The product_id field must be an integer"),
- *             @OA\Property(property="errors", type="object")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Server error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Failed to update cart"),
- *             @OA\Property(property="error", type="string", example="Database error occurred")
- *         )
- *     ),
- *     security={{"sanctum": {}}}
- * )
- */
-public function updateCart(Request $request)
-{
-    $request->validate([
-        'product_id' => 'required|integer|exists:products,id',
-        'quantity' => 'required|integer|min:1',
-    ]);
-
-    try {
-        return DB::transaction(function () use ($request) {
-            $order = Order::where('user_id', Auth::id())
+    public function getCart()
+    {
+        try {
+            $user = Auth::user();
+            $cart = Order::where('user_id', $user->id)
                 ->where('is_validated', false)
+                ->with(['orderProducts.product.pictures'])
                 ->first();
 
-            if (!$order) {
+            if (!$cart) {
+                Log::info('getCart: Aucun panier trouvé pour user_id=' . $user->id);
                 return response()->json(['message' => 'Cart not found'], 404);
             }
 
-            $orderProduct = OrderProduct::where('order_id', $order->id)
-                ->where('product_id', $request->product_id)
-                ->first();
+            $cartData = [
+                'id' => $cart->id,
+                'total_price' => floatval($cart->total_amount),
+                'items' => $cart->orderProducts->map(function ($orderProduct) {
+                    return [
+                        'id' => $orderProduct->id,
+                        'product_id' => $orderProduct->product_id,
+                        'quantity' => $orderProduct->quantity,
+                        'price' => floatval($orderProduct->unit_price),
+                        'product' => [
+                            'id' => $orderProduct->product->id,
+                            'name' => $orderProduct->product->name,
+                            'pictures' => $orderProduct->product->pictures->map(function ($picture) {
+                                return [
+                                    'id' => $picture->id,
+                                    'picture' => $picture->picture,
+                                ];
+                            }),
+                        ],
+                    ];
+                }),
+            ];
 
-            if (!$orderProduct) {
-                return response()->json(['message' => 'Product not found in cart'], 404);
-            }
-
-            $product = Product::findOrFail($request->product_id);
-            $oldQuantity = $orderProduct->quantity;
-            $orderProduct->quantity = $request->quantity;
-            $orderProduct->save();
-
-            $order->total_amount += ($request->quantity - $oldQuantity) * $product->price;
-            $order->save();
-
-            return response()->json(['message' => 'Product quantity updated', 'order_id' => $order->id], 200);
-        });
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Failed to update cart',
-            'error' => 'Database error occurred'
-        ], 500);
-    }
-}/**
-     * @OA\Delete(
-     *     path="/api/orders/cart/remove/{product_id}",
-     *     summary="Remove Product from Cart",
-     *     description="Removes a product from the authenticated user's cart.",
-     *     operationId="removeCartProduct",
-     *     tags={"Cart"},
-     *     @OA\Parameter(
-     *         name="product_id",
-     *         in="path",
-     *         description="ID of the product to remove",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Product removed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product removed from cart")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Cart or product not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Cart or product not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Failed to remove product"),
-     *             @OA\Property(property="error", type="string", example="Database error occurred")
-     *         )
-     *     ),
-     *     security={{"sanctum": {}}}
-     * )
-     */
-    public function removeFromCart($product_id)
-    {
-        try {
-            return DB::transaction(function () use ($product_id) {
-                $order = Order::where('user_id', Auth::id())
-                    ->where('is_validated', false)
-                    ->first();
-
-                if (!$order) {
-                    return response()->json(['message' => 'Cart not found'], 404);
-                }
-
-                $orderProduct = OrderProduct::where('order_id', $order->id)
-                    ->where('product_id', $product_id)
-                    ->first();
-
-                if (!$orderProduct) {
-                    return response()->json(['message' => 'Product not found in cart'], 404);
-                }
-
-                $order->total_amount -= $orderProduct->quantity * $orderProduct->unit_price;
-                $orderProduct->delete();
-                $order->save();
-
-                if ($order->orderProducts()->count() === 0) {
-                    $order->delete();
-                }
-
-                return response()->json(['message' => 'Product removed from cart'], 200);
-            });
+            Log::info('getCart: Panier chargé avec succès pour user_id=' . $user->id, ['cart_id' => $cart->id]);
+            return response()->json(['data' => $cartData]);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to remove product',
-                'error' => 'Database error occurred'
-            ], 500);
+            Log::error('getCart: Erreur lors de la récupération du panier', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'Erreur lors de la récupération du panier'], 500);
         }
     }
 
+    public function removeFromCart(Request $request, $itemId)
+    {
+        try {
+            $user = Auth::user();
+            $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
+
+            if (!$cart) {
+                Log::info('removeFromCart: Aucun panier trouvé pour user_id=' . $user->id);
+                return response()->json(['message' => 'Cart not found'], 404);
+            }
+
+            $orderProduct = OrderProduct::where('id', $itemId)
+                ->where('order_id', $cart->id)
+                ->first();
+
+            if (!$orderProduct) {
+                Log::warning('removeFromCart: Article non trouvé dans le panier', [
+                    'itemId' => $itemId,
+                    'order_id' => $cart->id,
+                ]);
+                return response()->json(['message' => 'Item not found in cart'], 404);
+            }
+
+            $orderProduct->delete();
+            Log::info("Article supprimé du panier: item_id={$itemId}, order_id={$cart->id}");
+
+            $cart->update([
+                'total_amount' => $cart->orderProducts->sum(fn($item) => $item->quantity * $item->unit_price),
+            ]);
+
+            return response()->json(['message' => 'Item removed from cart']);
+        } catch (\Exception $e) {
+            Log::error('removeFromCart: Erreur lors de la suppression de l\'article', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'Erreur lors de la suppression de l\'article'], 500);
+        }
+    }
+
+    public function updateCartItem(Request $request, $itemId)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        try {
+            $user = Auth::user();
+            $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
+
+            if (!$cart) {
+                Log::info('updateCartItem: Aucun panier trouvé pour user_id=' . $user->id);
+                return response()->json(['message' => 'Cart not found'], 404);
+            }
+
+            $orderProduct = OrderProduct::where('id', $itemId)
+                ->where('order_id', $cart->id)
+                ->first();
+
+            if (!$orderProduct) {
+                Log::warning('updateCartItem: Article non trouvé dans le panier', [
+                    'itemId' => $itemId,
+                    'order_id' => $cart->id,
+                ]);
+                return response()->json(['message' => 'Item not found in cart'], 404);
+            }
+
+            $orderProduct->update(['quantity' => $validated['quantity']]);
+            Log::info("Quantité mise à jour: item_id={$itemId}, nouvelle quantité={$validated['quantity']}");
+
+            $cart->update([
+                'total_amount' => $cart->orderProducts->sum(fn($item) => $item->quantity * $item->unit_price),
+            ]);
+
+            return response()->json(['message' => 'Item updated in cart']);
+        } catch (\Exception $e) {
+            Log::error('updateCartItem: Erreur lors de la mise à jour de l\'article', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'Erreur lors de la mise à jour de l\'article'], 500);
+        }
+    }
+
+    public function validateCart()
+    {
+        try {
+            $user = Auth::user();
+            $cart = Order::where('user_id', $user->id)->where('is_validated', false)->first();
+
+            if (!$cart) {
+                Log::info('validateCart: Aucun panier trouvé pour user_id=' . $user->id);
+                return response()->json(['message' => 'Cart not found'], 404);
+            }
+
+            foreach ($cart->orderProducts as $orderProduct) {
+                $product = Product::find($orderProduct->product_id);
+                if (!$product || $product->quantity < $orderProduct->quantity) {
+                    Log::warning('validateCart: Produit non disponible ou quantité insuffisante', [
+                        'product_id' => $orderProduct->product_id,
+                        'requested_quantity' => $orderProduct->quantity,
+                        'available_quantity' => $product ? $product->quantity : 0,
+                    ]);
+                    return response()->json(['message' => 'Produit non disponible ou quantité insuffisante'], 400);
+                }
+            }
+
+            $cart->update(['is_validated' => true]);
+            Log::info('validateCart: Panier validé pour user_id=' . $user->id, ['cart_id' => $cart->id]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('validateCart: Erreur lors de la validation du panier', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'Erreur lors de la validation du panier'], 500);
+        }
+    }
 }
