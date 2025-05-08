@@ -12,6 +12,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillsController;
+use App\Http\Controllers\ServiceOrderController;
 
 
 
@@ -105,10 +106,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-
+    Route::prefix('service-orders')->group(function () {
+        Route::post('/', [ServiceOrderController::class, 'store']);
+        Route::patch('{id}/status', [ServiceOrderController::class, 'updateStatus'])->whereNumber('id');
+        Route::get('{id}', [ServiceOrderController::class, 'show'])->whereNumber('id');
+        Route::get('user/{user_id}', [ServiceOrderController::class, 'getByUser'])->whereNumber('user_id');
+        Route::get('service-provider/{service_provider_id}', [ServiceOrderController::class, 'getByServiceProvider'])->whereNumber('service_provider_id');
+    });
     //service_providers_projects
     
-
+        
 
 
 

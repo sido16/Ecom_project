@@ -266,6 +266,172 @@ class ProjectController extends Controller
         }
     }
 
+        /**
+ * @OA\Put(
+ *     path="/api/projects/{id}",
+ *     summary="Update a Project",
+ *     description="Updates an existing project and its pictures for a service provider, restricted to the authenticated user who owns the service provider.",
+ *     operationId="updateProject",
+ *     tags={"Projects"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the project to update",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="title", type="string", example="Updated Website Project", description="Title of the project", maxLength=100),
+ *             @OA\Property(property="description", type="string", example="Updated description for a 5-page website", nullable=true, description="Description of the project"),
+ *             @OA\Property(
+ *                 property="pictures",
+ *                 type="array",
+ *                 nullable=true,
+ *                 description="Array of picture files to upload",
+ *                 @OA\Items(type="string", format="binary")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Project updated successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Project updated successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="service_provider_id", type="integer", example=1),
+ *                 @OA\Property(property="title", type="string", example="Updated Website Project"),
+ *                 @OA\Property(property="description", type="string", example="Updated description for a 5-page website", nullable=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-08T10:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-08T10:05:00.000000Z"),
+ *                 @OA\Property(
+ *                     property="pictures",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="project_id", type="integer", example=1),
+ *                         @OA\Property(property="picture", type="string", example="project_pictures/image1.jpg"),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-08T10:00:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-08T10:00:00.000000Z")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Forbidden",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Not authorized to update this project")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Project not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Project not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The title field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to update project"),
+ *             @OA\Property(property="error", type="string", example="Database or storage error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function update(Request $request, $id)
+{
+    try {
+        $project = Project::with('pictures')->findOrFail($id);
+        $serviceProvider = ServiceProvider::where('id', $project->service_provider_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $request->validate([
+            'title' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'pictures' => 'sometimes|array|min:1',
+            'pictures.*' => 'file|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        return DB::transaction(function () use ($request, $project) {
+            $project->update([
+                'title' => $request->title,
+                'description' => $request->description,
+            ]);
+
+            if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
+                foreach ($project->pictures as $existingPicture) {
+                    Storage::disk('public')->delete($existingPicture->picture);
+                    $existingPicture->delete();
+                }
+
+                foreach ($request->file('pictures') as $picture) {
+                    if ($picture->isValid()) {
+                        ProjectPicture::create([
+                            'project_id' => $project->id,
+                            'picture' => $picture->store('project_pictures', 'public')
+                        ]);
+                    }
+                }
+            }
+
+            Log::info("Project updated: ID {$project->id}, Service Provider ID: {$project->service_provider_id}");
+
+            return response()->json([
+                'message' => 'Project updated successfully',
+                'data' => $project->load('pictures')
+            ], 200);
+        });
+    } catch (ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation error',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['message' => 'Project not found'], 404);
+    } catch (QueryException $e) {
+        Log::error('Failed to update project or store pictures: ' . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update project',
+            'error' => 'Database error occurred'
+        ], 500);
+    } catch (\Exception $e) {
+        Log::error('Failed to update project pictures in storage: ' . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update project',
+            'error' => 'Storage error occurred'
+        ], 500);
+    }
+}
+
+
 
 }
 
