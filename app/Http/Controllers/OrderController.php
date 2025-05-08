@@ -37,11 +37,11 @@ class OrderController extends Controller
             ->first();
 
         if ($existingOrderProduct) {
-            // Remplacer la quantité existante
+            // Incrémenter la quantité existante
             $existingOrderProduct->update([
-                'quantity' => $validated['quantity'],
+                'quantity' => $existingOrderProduct->quantity + $validated['quantity'],
             ]);
-            Log::info("Quantité remplacée pour product_id={$product->id}, nouvelle quantité={$validated['quantity']}");
+            Log::info("Quantité incrémentée pour product_id={$product->id}, nouvelle quantité={$existingOrderProduct->quantity}");
         } else {
             // Créer un nouvel enregistrement
             $orderProduct = OrderProduct::create([
@@ -59,7 +59,7 @@ class OrderController extends Controller
             'total_amount' => $cart->orderProducts->sum(fn($item) => $item->quantity * $item->unit_price),
         ]);
 
-        return response()->json(['message' => 'Product added to cart', 'order_id' => $cart->id]);
+        return response()->json(['message' => 'Product added to cart', 'order_id' => $cart->id], 201);
     }
 
     public function getCart()
