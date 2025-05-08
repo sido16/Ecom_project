@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use App\Models\Project;
 use App\Models\ProjectPicture;
@@ -665,134 +666,315 @@ public function showByUser($user_id)
         }
     }
 
-    /**
- * @OA\Put(
- *     path="/api/service-providers/{id}",
- *     summary="Update a Service Provider",
- *     description="Updates an existing service provider for the authenticated user, modifying domain, skills, and starting price.",
- *     operationId="updateServiceProvider",
- *     tags={"Service Providers"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         description="ID of the service provider to update",
- *         required=true,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
- *             @OA\Property(property="skill_domain_id", type="integer", example=1, description="ID of the skill domain"),
- *             @OA\Property(property="starting_price", type="number", format="float", example=50.00, description="Starting price for services", nullable=true),
- *             @OA\Property(
- *                 property="skill_ids",
- *                 type="array",
- *                 @OA\Items(type="integer", example=1),
- *                 description="Array of skill IDs to associate with the provider"
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Service provider updated successfully",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="message", type="string", example="Service provider updated successfully"),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="user_id", type="integer", example=1),
- *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
- *                 @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
- *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
- *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
- *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-11T12:00:00Z")
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthenticated",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Unauthenticated")
- *         )
- *     ),
- *     @OA\Response(
- *         response=403,
- *         description="Unauthorized",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="You are not authorized to update this service provider")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Service provider not found",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Service provider not found")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Validation error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="The skill_domain_id field is required"),
- *             @OA\Property(property="errors", type="object")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Server error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Failed to update service provider"),
- *             @OA\Property(property="error", type="string", example="Database error occurred")
- *         )
- *     ),
- *     security={{"sanctum": {}}}
- * )
- */
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'description' => 'nullable|string',
-        'skill_domain_id' => 'required|exists:skill_domains,id',
-        'starting_price' => 'nullable|numeric|min:0',
-        'skill_ids' => 'required|array|min:1',
-        'skill_ids.*' => 'exists:skills,id',
-    ]);
-
-    try {
-        $serviceProvider = ServiceProvider::findOrFail($id);
-
-        // Check if the authenticated user owns the service provider
-        if ($serviceProvider->user_id !== Auth::id()) {
-            return response()->json(['message' => 'You are not authorized to update this service provider'], 403);
-        }
-
-        $serviceProvider->update([
-            'skill_domain_id' => $request->skill_domain_id,
-            'description' => $request->description,
-            'starting_price' => $request->starting_price,
+        /**
+     * @OA\Put(
+     *     path="/api/service-providers/{id}",
+     *     summary="Update a Service Provider",
+     *     description="Updates an existing service provider for the authenticated user, modifying domain, skills, and starting price.",
+     *     operationId="updateServiceProvider",
+     *     tags={"Service Providers"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the service provider to update",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
+     *             @OA\Property(property="skill_domain_id", type="integer", example=1, description="ID of the skill domain"),
+     *             @OA\Property(property="starting_price", type="number", format="float", example=50.00, description="Starting price for services", nullable=true),
+     *             @OA\Property(
+     *                 property="skill_ids",
+     *                 type="array",
+     *                 @OA\Items(type="integer", example=1),
+     *                 description="Array of skill IDs to associate with the provider"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Service provider updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Service provider updated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="skill_domain_id", type="integer", example=1),
+     *                 @OA\Property(property="description", type="string", example="Experienced web developer specializing in e-commerce solutions", nullable=true),
+     *                 @OA\Property(property="starting_price", type="number", format="float", example=50.00, nullable=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-07-11T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-07-11T12:00:00Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="You are not authorized to update this service provider")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Service provider not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Service provider not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The skill_domain_id field is required"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to update service provider"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'description' => 'nullable|string',
+            'skill_domain_id' => 'required|exists:skill_domains,id',
+            'starting_price' => 'nullable|numeric|min:0',
+            'skill_ids' => 'required|array|min:1',
+            'skill_ids.*' => 'exists:skills,id',
         ]);
 
-        // Sync skills (replaces existing skill associations with new ones)
-        $serviceProvider->skills()->sync($request->skill_ids);
+        try {
+            $serviceProvider = ServiceProvider::findOrFail($id);
 
-        return response()->json([
-            'message' => 'Service provider updated successfully',
-            'data' => $serviceProvider
-        ], 200);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return response()->json(['message' => 'Service provider not found'], 404);
-    } catch (\Illuminate\Database\QueryException $e) {
-        return response()->json([
-            'message' => 'Failed to update service provider',
-            'error' => 'Database error occurred'
-        ], 500);
+            // Check if the authenticated user owns the service provider
+            if ($serviceProvider->user_id !== Auth::id()) {
+                return response()->json(['message' => 'You are not authorized to update this service provider'], 403);
+            }
+
+            $serviceProvider->update([
+                'skill_domain_id' => $request->skill_domain_id,
+                'description' => $request->description,
+                'starting_price' => $request->starting_price,
+            ]);
+
+            // Sync skills (replaces existing skill associations with new ones)
+            $serviceProvider->skills()->sync($request->skill_ids);
+
+            return response()->json([
+                'message' => 'Service provider updated successfully',
+                'data' => $serviceProvider
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Service provider not found'], 404);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'Failed to update service provider',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
     }
-}
+
+    
+        /**
+     * @OA\Get(
+     *     path="/api/service-providers/{id}/portfolio",
+     *     summary="Get Service Provider Portfolio",
+     *     description="Retrieves a service provider's portfolio by ID, including all projects with their pictures and service provider pictures.",
+     *     operationId="getServiceProviderPortfolio",
+     *     tags={"Portfolio"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the service provider",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Portfolio retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="projects",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="service_provider_id", type="integer", example=1),
+     *                         @OA\Property(property="title", type="string", example="E-commerce Platform"),
+     *                         @OA\Property(property="description", type="string", example="A platform for online sales", nullable=true),
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-07T09:33:56.000000Z"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-07T09:33:56.000000Z"),
+     *                         @OA\Property(
+     *                             property="pictures",
+     *                             type="array",
+     *                             @OA\Items(
+     *                                 type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="project_id", type="integer", example=1),
+     *                                 @OA\Property(property="picture", type="string", example="project_pictures/image1.jpg"),
+     *                                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z"),
+     *                                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z")
+     *                             )
+     *                         )
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="service_provider_pictures",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="service_provider_id", type="integer", example=1),
+     *                         @OA\Property(property="picture", type="string", example="service_provider_pictures/image1.jpg"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-07T09:37:21.000000Z")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Service provider not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Service provider not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve portfolio"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function getPortfolio($id)
+    {
+        try {
+            $serviceProvider = ServiceProvider::with(['projects.pictures', 'pictures'])->findOrFail($id);
+            $portfolio = [
+                'projects' => $serviceProvider->projects,
+                'service_provider_pictures' => $serviceProvider->pictures
+            ];
+            return response()->json(['data' => $portfolio], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Service provider not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve portfolio',
+                'error' => 'Database error occurred'
+            ], 500);
+        }
+    }
+
+
+    /**
+     * @OA\Delete(
+     *     path="/api/service-providers/portfolio/pictures/{id}",
+     *     summary="Delete a Service Provider Picture",
+     *     description="Deletes a picture associated with a service provider's portfolio, if the authenticated user owns the service provider.",
+     *     operationId="deleteServiceProviderPicture",
+     *     tags={"Portfolio"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the picture to delete",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Picture deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Picture deleted successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Not authorized to delete this picture")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Picture not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Picture not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to delete picture"),
+     *             @OA\Property(property="error", type="string", example="Database or storage error")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function deletePicture($id)
+    {
+        try {
+            $picture = ServiceProviderPicture::findOrFail($id);
+            $serviceProvider = ServiceProvider::findOrFail($picture->service_provider_id);
+    
+            if ($serviceProvider->user_id !== Auth::id()) {
+                return response()->json(['message' => 'Not authorized to delete this picture'], 403);
+            }
+    
+            Storage::delete($picture->picture);
+            $picture->delete();
+    
+            return response()->json(['message' => 'Picture deleted successfully'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Picture not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete picture',
+                'error' => 'Database or storage error'
+            ], 500);
+        }
+    }
+    
+
+
      
 
 }

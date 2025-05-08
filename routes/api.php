@@ -100,6 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ServiceProviderController::class, 'show'])->whereNumber('id');
         Route::get('/by-user/{user_id}', [ServiceProviderController::class, 'showByUser'])->whereNumber('user_id');
         Route::delete('/portfolio/projects/{id}', [ProjectController::class, 'destroy']);
+        Route::get('/{id}/portfolio', [ServiceProviderController::class, 'getPortfolio'])->whereNumber('id');
+        Route::delete('portfolio/pictures/{id}', [ServiceProviderController::class, 'deletePicture'])->whereNumber('id');
     });
 
 
