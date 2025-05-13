@@ -8001,6 +8001,220 @@
                     {}
                 ]
             }
+        },
+        "/api/workspaces/user": {
+            "get": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Get Workspaces by Authenticated User",
+                "description": "Retrieves all active workspaces (studio or coworking) for the currently authenticated user, including studio and coworking details (excluding services and images).",
+                "operationId": "getWorkspacesByUser",
+                "responses": {
+                    "200": {
+                        "description": "Workspaces retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspaces retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "business_name": {
+                                                        "type": "string",
+                                                        "example": "PhotoSnap Studio"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "studio"
+                                                    },
+                                                    "phone_number": {
+                                                        "type": "string",
+                                                        "example": "1234567890"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "contact@photosnap.com"
+                                                    },
+                                                    "location": {
+                                                        "type": "string",
+                                                        "example": "Downtown",
+                                                        "nullable": true
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "123 Main St"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Professional photography studio",
+                                                        "nullable": true
+                                                    },
+                                                    "opening_hours": {
+                                                        "type": "string",
+                                                        "example": "9AM-5PM",
+                                                        "nullable": true
+                                                    },
+                                                    "picture": {
+                                                        "type": "string",
+                                                        "example": "workspace_pictures/studio.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-05-13T23:02:00.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-05-13T23:02:00.000000Z"
+                                                    },
+                                                    "studio": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "workspace_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "price_per_hour": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 50
+                                                            },
+                                                            "price_per_day": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 200
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-13T23:02:00.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-13T23:02:00.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "coworking": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "workspace_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "price_per_day": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 25
+                                                            },
+                                                            "price_per_month": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 400
+                                                            },
+                                                            "seating_capacity": {
+                                                                "type": "integer",
+                                                                "example": 50
+                                                            },
+                                                            "meeting_rooms": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-13T23:02:00.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-13T23:02:00.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve workspaces"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "tags": [
