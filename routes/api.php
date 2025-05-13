@@ -126,6 +126,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workspaces/coworking/create', [WorkspaceController::class, 'createCoworking']);
         Route::post('/workspaces/{workspace_id}/studio/images', [WorkspaceController::class, 'insertStudioPictures']);
         Route::post('/workspaces/{workspace_id}/coworking/images', [WorkspaceController::class, 'insertCoworkingPictures']);
+        Route::get('/workspaces/type/{type}', [WorkspaceController::class, 'getWorkspacesByType']);
+        Route::get('/workspaces/{workspace_id}', [WorkspaceController::class, 'getWorkspaceById']);
 
 });
 

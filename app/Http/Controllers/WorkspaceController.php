@@ -582,4 +582,279 @@ class WorkspaceController extends Controller
         }
     }
 
+
+
+        /**
+ * @OA\Get(
+ *     path="/api/workspaces/type/{type}",
+ *     summary="Get Workspaces by Type",
+ *     description="Retrieves all workspaces of the specified type (studio or coworking) with their associated details, excluding images, for the authenticated user or publicly.",
+ *     operationId="getWorkspacesByType",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="type",
+ *         in="path",
+ *         description="Type of workspace to retrieve (studio or coworking)",
+ *         required=true,
+ *         @OA\Schema(type="string", enum={"studio", "coworking"}, example="studio")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Workspaces retrieved successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspaces retrieved successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="user_id", type="integer", example=1),
+ *                     @OA\Property(property="business_name", type="string", example="PhotoSnap Studio"),
+ *                     @OA\Property(property="type", type="string", example="studio"),
+ *                     @OA\Property(property="phone_number", type="string", example="1234567890"),
+ *                     @OA\Property(property="email", type="string", example="contact@photosnap.com"),
+ *                     @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *                     @OA\Property(property="address", type="string", example="123 Main St"),
+ *                     @OA\Property(property="description", type="string", example="Professional photography studio", nullable=true),
+ *                     @OA\Property(property="opening_hours", type="string", example="9AM-5PM", nullable=true),
+ *                     @OA\Property(property="picture", type="string", example="workspace_pictures/studio.jpg", nullable=true),
+ *                     @OA\Property(property="is_active", type="boolean", example=true),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(
+ *                         property="studio",
+ *                         type="object",
+ *                         nullable=true,
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="workspace_id", type="integer", example=1),
+ *                         @OA\Property(property="price_per_hour", type="number", format="float", example=50.00),
+ *                         @OA\Property(property="price_per_day", type="number", format="float", example=200.00),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                         @OA\Property(
+ *                             property="services",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="object",
+ *                                 @OA\Property(property="id", type="integer", example=1),
+ *                                 @OA\Property(property="service", type="string", example="Lighting Equipment")
+ *                             )
+ *                         )
+ *                     ),
+ *                     @OA\Property(
+ *                         property="coworking",
+ *                         type="object",
+ *                         nullable=true,
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="workspace_id", type="integer", example=1),
+ *                         @OA\Property(property="price_per_day", type="number", format="float", example=25.00),
+ *                         @OA\Property(property="price_per_month", type="number", format="float", example=400.00),
+ *                         @OA\Property(property="seating_capacity", type="integer", example=50),
+ *                         @OA\Property(property="meeting_rooms", type="integer", example=3),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid workspace type",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Invalid workspace type. Use 'studio' or 'coworking'.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to retrieve workspaces"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}, {}}
+ * )
+ */
+public function getWorkspacesByType(Request $request, $type)
+{
+    try {
+        // Validate the type parameter
+        if (!in_array($type, ['studio', 'coworking'])) {
+            return response()->json([
+                'message' => "Invalid workspace type. Use 'studio' or 'coworking'.",
+            ], 400);
+        }
+
+        // Query workspaces by type, including studio or coworking details
+        $query = Workspace::where('type', $type)
+            ->where('is_active', true);
+
+        // If authenticated, optionally filter by user
+        if (Auth::check()) {
+            $query->where('user_id', Auth::id());
+        }
+
+        $workspaces = $query->with([
+            'studio' ])->get();
+        Log::info("Retrieved workspaces of type {$type}", ['count' => $workspaces->count()]);
+
+        return response()->json([
+            'message' => 'Workspaces retrieved successfully',
+            'data' => $workspaces,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to retrieve workspaces of type {$type}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to retrieve workspaces',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/workspaces/{workspace_id}",
+ *     summary="Get Workspace by ID",
+ *     description="Retrieves a single workspace by its ID, including all associated details and images, for the authenticated user or publicly.",
+ *     operationId="getWorkspaceById",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the workspace to retrieve",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Workspace retrieved successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace retrieved successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="business_name", type="string", example="PhotoSnap Studio"),
+ *                 @OA\Property(property="type", type="string", example="studio"),
+ *                 @OA\Property(property="phone_number", type="string", example="1234567890"),
+ *                 @OA\Property(property="email", type="string", example="contact@photosnap.com"),
+ *                 @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *                 @OA\Property(property="address", type="string", example="123 Main St"),
+ *                 @OA\Property(property="description", type="string", example="Professional photography studio", nullable=true),
+ *                 @OA\Property(property="opening_hours", type="string", example="9AM-5PM", nullable=true),
+ *                 @OA\Property(property="picture", type="string", example="workspace_pictures/studio.jpg", nullable=true),
+ *                 @OA\Property(property="is_active", type="boolean", example=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                 @OA\Property(
+ *                     property="studio",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="price_per_hour", type="number", format="float", example=50.00),
+ *                     @OA\Property(property="price_per_day", type="number", format="float", example=200.00),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(
+ *                         property="services",
+ *                         type="array",
+ *                         @OA\Items(
+ *                             type="object",
+ *                             @OA\Property(property="id", type="integer", example=1),
+ *                             @OA\Property(property="service", type="string", example="Lighting Equipment")
+ *                         )
+ *                     )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="coworking",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="price_per_day", type="number", format="float", example=25.00),
+ *                     @OA\Property(property="price_per_month", type="number", format="float", example=400.00),
+ *                     @OA\Property(property="seating_capacity", type="integer", example=50),
+ *                     @OA\Property(property="meeting_rooms", type="integer", example=3),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="images",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="workspace_id", type="integer", example=1),
+ *                         @OA\Property(property="image_url", type="string", example="workspace_images/image1.jpg"),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to retrieve workspace"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}, {}}
+ * )
+ */
+public function getWorkspaceById(Request $request, $workspace_id)
+{
+    try {
+        // Query workspace by ID, including all details and images
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('is_active', true)
+            ->with([
+                'studio' => function ($query) {
+                    $query->with('services:id,service');
+                },
+                'coworking',
+                'images'
+            ])
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found',
+            ], 404);
+        }
+
+        // If authenticated, optionally check ownership
+        if (Auth::check() && $workspace->user_id !== Auth::id()) {
+            // Optionally restrict access; here we allow public access
+            // return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        Log::info("Retrieved workspace ID {$workspace_id}");
+
+        return response()->json([
+            'message' => 'Workspace retrieved successfully',
+            'data' => $workspace,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to retrieve workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to retrieve workspace',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
+
 }
