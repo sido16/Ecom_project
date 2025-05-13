@@ -1,0 +1,585 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Studio;
+use App\Models\Workspace;
+use App\Models\WorkspaceImage;
+use App\Models\Coworking;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+
+
+class WorkspaceController extends Controller
+{
+
+  /**
+ * @OA\Post(
+ *     path="/api/workspaces/studio/create",
+ *     summary="Create a Studio Workspace",
+ *     description="Creates a new studio workspace with associated details, services, and a single main picture for the authenticated user.",
+ *     operationId="createStudioWorkspace",
+ *     tags={"Workspaces"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(property="business_name", type="string", example="PhotoSnap Studio", description="Business name", maxLength=255),
+ *                 @OA\Property(property="phone_number", type="string", example="1234567890", description="Phone number", maxLength=50),
+ *                 @OA\Property(property="email", type="string", example="contact@photosnap.com", description="Email", maxLength=255),
+ *                 @OA\Property(property="location", type="string", example="Downtown", description="General location", nullable=true),
+ *                 @OA\Property(property="address", type="string", example="123 Main St", description="Street address", maxLength=100),
+ *                 @OA\Property(property="description", type="string", example="Professional photography studio", description="Description", nullable=true),
+ *                 @OA\Property(property="opening_hours", type="string", example="9AM-5PM", description="Opening hours", maxLength=255, nullable=true),
+ *                 @OA\Property(property="picture", type="string", format="binary", description="Main workspace picture", nullable=true),
+ *                 @OA\Property(property="price_per_hour", type="number", format="float", example=50.00, description="Hourly rental price"),
+ *                 @OA\Property(property="price_per_day", type="number", format="float", example=200.00, description="Daily rental price"),
+ *                 @OA\Property(property="studio_service_ids", type="array", description="Array of studio service IDs", @OA\Items(type="integer", example=1))
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Studio created successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Studio created successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="business_name", type="string", example="PhotoSnap Studio"),
+ *                 @OA\Property(property="type", type="string", example="studio"),
+ *                 @OA\Property(property="studio", type="object", @OA\Property(property="id", type="integer", example=1))
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The business_name field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to create studio"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+    public function createStudio(Request $request)
+    {
+        try {
+            $request->validate([
+                'business_name' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:50|unique:workspaces,phone_number',
+                'email' => 'required|email|max:255|unique:workspaces,email',
+                'location' => 'nullable|string',
+                'address' => 'required|string|max:100',
+                'description' => 'nullable|string',
+                'opening_hours' => 'nullable|string|max:255',
+                'picture' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+                'price_per_hour' => 'required|numeric|min:0',
+                'price_per_day' => 'required|numeric|min:0',
+                'studio_service_ids' => 'sometimes|array|min:1',
+                'studio_service_ids.*' => 'exists:studio_services,id',
+                'images' => 'sometimes|array|min:1',
+                'images.*' => 'file|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $workspace = Workspace::create([
+                    'user_id' => Auth::id(),
+                    'business_name' => $request->business_name,
+                    'type' => 'studio',
+                    'phone_number' => $request->phone_number,
+                    'email' => $request->email,
+                    'location' => $request->location,
+                    'address' => $request->address,
+                    'description' => $request->description,
+                    'opening_hours' => $request->opening_hours,
+                    'picture' => $request->hasFile('picture') ? $request->file('picture')->store('workspace_pictures', 'public') : null,
+                    'is_active' => true,
+                ]);
+
+                $studio = Studio::create([
+                    'workspace_id' => $workspace->id,
+                    'price_per_hour' => $request->price_per_hour,
+                    'price_per_day' => $request->price_per_day,
+                ]);
+
+                if ($request->has('studio_service_ids')) {
+                    $studio->services()->sync($request->studio_service_ids);
+                }
+
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $image) {
+                        WorkspaceImage::create([
+                            'workspace_id' => $workspace->id,
+                            'image_url' => $image->store('workspace_images', 'public'),
+                        ]);
+                    }
+                }
+
+                Log::info("Studio created: ID {$workspace->id}, User ID: " . Auth::id());
+
+                return response()->json([
+                    'message' => 'Studio created successfully',
+                    'data' => $workspace->load(['studio', 'studio.services', 'images']),
+                ], 201);
+            });
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (QueryException $e) {
+            Log::error('Failed to create studio: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create studio',
+                'error' => 'Database error occurred',
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Failed to store studio images: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create studio',
+                'error' => 'Storage error occurred',
+            ], 500);
+        }
+    }
+
+
+      /**
+ * @OA\Post(
+ *     path="/api/workspaces/{workspace_id}/studio/images",
+ *     summary="Insert Images for a Studio Workspace",
+ *     description="Uploads and associates multiple additional images with an existing studio workspace for the authenticated user.",
+ *     operationId="insertStudioWorkspaceImages",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the studio workspace to add images to",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="images",
+ *                     type="array",
+ *                     description="Array of image files to upload",
+ *                     @OA\Items(type="string", format="binary")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Images inserted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Images inserted successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="image_url", type="string", example="workspace_images/image1.jpg"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to add images to this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The images field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to insert images"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+
+    public function insertStudioPictures(Request $request, $workspace_id)
+    {
+        try {
+            $request->validate([
+                'images' => 'required|array|min:1',
+                'images.*' => 'file|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            $workspace = Workspace::where('id', $workspace_id)
+                ->where('type', 'studio')
+                ->first();
+
+            if (!$workspace) {
+                return response()->json([
+                    'message' => 'Workspace not found',
+                ], 404);
+            }
+
+            if ($workspace->user_id !== Auth::id()) {
+                return response()->json([
+                    'message' => 'You are not authorized to add pictures to this workspace',
+                ], 403);
+            }
+
+            return DB::transaction(function () use ($request, $workspace) {
+                $insertedImages = [];
+
+                foreach ($request->file('images') as $image) {
+                    $imagePath = $image->store('workspace_images', 'public');
+                    $workspaceImage = WorkspaceImage::create([
+                        'workspace_id' => $workspace->id,
+                        'image_url' => $imagePath,
+                    ]);
+                    $insertedImages[] = $workspaceImage;
+                }
+
+                Log::info("Pictures inserted for workspace ID {$workspace->id}, User ID: " . Auth::id());
+
+                return response()->json([
+                    'message' => 'Pictures inserted successfully',
+                    'data' => $insertedImages,
+                ], 201);
+            });
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (QueryException $e) {
+            Log::error('Failed to insert pictures: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to insert pictures',
+                'error' => 'Database error occurred',
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Failed to store pictures: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to insert pictures',
+                'error' => 'Storage error occurred',
+            ], 500);
+        }
+    }
+
+/**
+ * @OA\Post(
+ *     path="/api/workspaces/coworking/create",
+ *     summary="Create a Coworking Workspace",
+ *     description="Creates a new coworking workspace with associated details and a single main picture for the authenticated user.",
+ *     operationId="createCoworkingWorkspace",
+ *     tags={"Workspaces"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(property="business_name", type="string", example="WorkHub Coworking", description="Business name", maxLength=255),
+ *                 @OA\Property(property="phone_number", type="string", example="1234567890", description="Phone number", maxLength=50),
+ *                 @OA\Property(property="email", type="string", example="info@workhub.com", description="Email", maxLength=255),
+ *                 @OA\Property(property="location", type="string", example="Downtown", description="General location", nullable=true),
+ *                 @OA\Property(property="address", type="string", example="456 Elm St", description="Street address", maxLength=100),
+ *                 @OA\Property(property="description", type="string", example="Modern coworking space with Wi-Fi", description="Description", nullable=true),
+ *                 @OA\Property(property="opening_hours", type="string", example="8AM-6PM", description="Opening hours", maxLength=255, nullable=true),
+ *                 @OA\Property(property="picture", type="string", format="binary", description="Main workspace picture", nullable=true),
+ *                 @OA\Property(property="price_per_day", type="number", format="float", example=25.00, description="Daily rental price"),
+ *                 @OA\Property(property="price_per_month", type="number", format="float", example=400.00, description="Monthly rental price"),
+ *                 @OA\Property(property="seating_capacity", type="integer", example=50, description="Number of available seats"),
+ *                 @OA\Property(property="meeting_rooms", type="integer", example=3, description="Number of meeting rooms")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Coworking created successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Coworking created successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="business_name", type="string", example="WorkHub Coworking"),
+ *                 @OA\Property(property="type", type="string", example="coworking"),
+ *                 @OA\Property(property="coworking", type="object", @OA\Property(property="id", type="integer", example=1))
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The business_name field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to create coworking"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+
+    public function createCoworking(Request $request)
+    {
+        try {
+            $request->validate([
+                'business_name' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:50|unique:workspaces,phone_number',
+                'email' => 'required|email|max:255|unique:workspaces,email',
+                'location' => 'nullable|string',
+                'address' => 'required|string|max:100',
+                'description' => 'nullable|string',
+                'opening_hours' => 'nullable|string|max:255',
+                'picture' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+                'price_per_day' => 'required|numeric|min:0',
+                'price_per_month' => 'required|numeric|min:0',
+                'seating_capacity' => 'required|integer|min:1',
+                'meeting_rooms' => 'required|integer|min:0',
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $workspace = Workspace::create([
+                    'user_id' => Auth::id(),
+                    'business_name' => $request->business_name,
+                    'type' => 'coworking',
+                    'phone_number' => $request->phone_number,
+                    'email' => $request->email,
+                    'location' => $request->location,
+                    'address' => $request->address,
+                    'description' => $request->description,
+                    'opening_hours' => $request->opening_hours,
+                    'picture' => $request->hasFile('picture') ? $request->file('picture')->store('workspace_pictures', 'public') : null,
+                    'is_active' => true,
+                ]);
+
+                Coworking::create([
+                    'workspace_id' => $workspace->id,
+                    'price_per_day' => $request->price_per_day,
+                    'price_per_month' => $request->price_per_month,
+                    'seating_capacity' => $request->seating_capacity,
+                    'meeting_rooms' => $request->meeting_rooms,
+                ]);
+
+                Log::info("Coworking created: ID {$workspace->id}, User ID: " . Auth::id());
+
+                return response()->json([
+                    'message' => 'Coworking created successfully',
+                    'data' => $workspace->load('coworking'),
+                ], 201);
+            });
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (QueryException $e) {
+            Log::error('Failed to create coworking: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create coworking',
+                'error' => 'Database error occurred',
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Failed to store coworking picture: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create coworking',
+                'error' => 'Storage error occurred',
+            ], 500);
+        }
+    }
+
+
+        /**
+ * @OA\Post(
+ *     path="/api/workspaces/{workspace_id}/coworking/images",
+ *     summary="Insert Images for a Coworking Workspace",
+ *     description="Uploads and associates multiple additional images with an existing coworking workspace for the authenticated user.",
+ *     operationId="insertCoworkingWorkspaceImages",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the coworking workspace to add images to",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="images",
+ *                     type="array",
+ *                     description="Array of additional image files to upload",
+ *                     @OA\Items(type="string", format="binary")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Images inserted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Images inserted successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="image_url", type="string", example="workspace_images/image1.jpg"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-12T12:00:00.000000Z")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to add images to this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The images field is required"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to insert images"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+    public function insertCoworkingPictures(Request $request, $workspace_id)
+    {
+        try {
+            $request->validate([
+                'pictures' => 'required|array|min:1',
+                'pictures.*' => 'file|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            $workspace = Workspace::where('id', $workspace_id)
+                ->whereIn('type', ['studio', 'coworking'])
+                ->first();
+
+            if (!$workspace) {
+                return response()->json([
+                    'message' => 'Workspace not found',
+                ], 404);
+            }
+
+            if ($workspace->user_id !== Auth::id()) {
+                return response()->json([
+                    'message' => 'You are not authorized to add pictures to this workspace',
+                ], 403);
+            }
+
+            return DB::transaction(function () use ($request, $workspace) {
+                $insertedImages = [];
+
+                foreach ($request->file('pictures') as $picture) {
+                    $imagePath = $picture->store('workspace_images', 'public');
+                    $workspaceImage = WorkspaceImage::create([
+                        'workspace_id' => $workspace->id,
+                        'image_url' => $imagePath,
+                    ]);
+                    $insertedImages[] = $workspaceImage;
+                }
+
+                Log::info("Pictures inserted for workspace ID {$workspace->id}, User ID: " . Auth::id());
+
+                return response()->json([
+                    'message' => 'Pictures inserted successfully',
+                    'data' => $insertedImages,
+                ], 201);
+            });
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (QueryException $e) {
+            Log::error('Failed to insert pictures: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to insert pictures',
+                'error' => 'Database error occurred',
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Failed to store pictures: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to insert pictures',
+                'error' => 'Storage error occurred',
+            ], 500);
+        }
+    }
+
+}

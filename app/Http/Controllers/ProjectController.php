@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
@@ -266,15 +270,22 @@ class ProjectController extends Controller
         }
     }
 
-        /**
+ /**
  * @OA\Put(
- *     path="/api/projects/{id}",
+ *     path="/api/service-providers/{service_provider_id}/portfolio/projects/{project_id}",
  *     summary="Update a Project",
  *     description="Updates an existing project and its pictures for a service provider, restricted to the authenticated user who owns the service provider.",
  *     operationId="updateProject",
  *     tags={"Projects"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="service_provider_id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the service provider",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="project_id",
  *         in="path",
  *         required=true,
  *         description="ID of the project to update",
@@ -341,9 +352,9 @@ class ProjectController extends Controller
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Project not found",
+ *         description="Project or service provider not found",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Project not found")
+ *             @OA\Property(property="message", type="string", example="Project or service provider not found")
  *         )
  *     ),
  *     @OA\Response(
@@ -365,12 +376,18 @@ class ProjectController extends Controller
  *     security={{"sanctum": {}}}
  * )
  */
-public function update(Request $request, $id)
+public function update(Request $request, $service_provider_id, $project_id)
 {
+    Log::info('Request data:', $request->all());
+
     try {
-        $project = Project::with('pictures')->findOrFail($id);
-        $serviceProvider = ServiceProvider::where('id', $project->service_provider_id)
+        $serviceProvider = ServiceProvider::where('id', $service_provider_id)
             ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $project = Project::where('id', $project_id)
+            ->where('service_provider_id', $service_provider_id)
+            ->with('pictures')
             ->firstOrFail();
 
         $request->validate([
@@ -415,7 +432,7 @@ public function update(Request $request, $id)
             'errors' => $e->errors()
         ], 422);
     } catch (ModelNotFoundException $e) {
-        return response()->json(['message' => 'Project not found'], 404);
+        return response()->json(['message' => 'Project or service provider not found'], 404);
     } catch (QueryException $e) {
         Log::error('Failed to update project or store pictures: ' . $e->getMessage());
         return response()->json([
@@ -430,7 +447,6 @@ public function update(Request $request, $id)
         ], 500);
     }
 }
-
 
 
 }

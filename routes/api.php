@@ -13,6 +13,9 @@ use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillsController;
 use App\Http\Controllers\ServiceOrderController;
+use App\Http\Controllers\WorkspaceController;
+
+
 
 
 
@@ -91,18 +94,19 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //service_providers
-    Route::prefix('service-providers')->group(function () {//serviceproviders
+    Route::prefix('service-providers')->group(function () {
         Route::post('/', [ServiceProviderController::class, 'store']);
         Route::get('/', [ServiceProviderController::class, 'index']);
-        Route::put('/{id}', [ServiceProviderController::class, 'update'])->whereNumber('id');
-        Route::post('/{id}/portfolio/pictures', [ServiceProviderController::class, 'uploadPictures']);
-        Route::post('/{id}/portfolio/projects', [ProjectController::class, 'store']);
-        Route::delete('/{id}', [ServiceProviderController::class, 'destroy']);
-        Route::get('/{id}', [ServiceProviderController::class, 'show'])->whereNumber('id');
+        Route::put('/{service_provider_id}', [ServiceProviderController::class, 'update'])->whereNumber('service_provider_id');
+        Route::post('/{service_provider_id}/portfolio/pictures', [ServiceProviderController::class, 'uploadPictures'])->whereNumber('service_provider_id');
+        Route::post('/{service_provider_id}/portfolio/projects', [ProjectController::class, 'store'])->whereNumber('service_provider_id');
+        Route::post('/{service_provider_id}/portfolio/projects/{project_id}', [ProjectController::class, 'update'])->whereNumber(['service_provider_id', 'project_id']);
+        Route::delete('/{service_provider_id}', [ServiceProviderController::class, 'destroy'])->whereNumber('service_provider_id');
+        Route::get('/{service_provider_id}', [ServiceProviderController::class, 'show'])->whereNumber('service_provider_id');
         Route::get('/by-user/{user_id}', [ServiceProviderController::class, 'showByUser'])->whereNumber('user_id');
-        Route::delete('/portfolio/projects/{id}', [ProjectController::class, 'destroy']);
-        Route::get('/{id}/portfolio', [ServiceProviderController::class, 'getPortfolio'])->whereNumber('id');
-        Route::delete('portfolio/pictures/{id}', [ServiceProviderController::class, 'deletePicture'])->whereNumber('id');
+        Route::delete('/portfolio/projects/{project_id}', [ProjectController::class, 'destroy'])->whereNumber('project_id');
+        Route::get('/{service_provider_id}/portfolio', [ServiceProviderController::class, 'getPortfolio'])->whereNumber('service_provider_id');
+        Route::delete('/portfolio/pictures/{picture_id}', [ServiceProviderController::class, 'deletePicture'])->whereNumber('picture_id');
     });
 
 
@@ -115,11 +119,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     //service_providers_projects
     
-        
+  
 
-
+    //sudios 
+        Route::post('/workspaces/studio/create', [WorkspaceController::class, 'createStudio']);
+        Route::post('/workspaces/coworking/create', [WorkspaceController::class, 'createCoworking']);
+        Route::post('/workspaces/{workspace_id}/studio/images', [WorkspaceController::class, 'insertStudioPictures']);
+        Route::post('/workspaces/{workspace_id}/coworking/images', [WorkspaceController::class, 'insertCoworkingPictures']);
 
 });
+
 
 
 

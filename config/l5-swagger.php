@@ -49,6 +49,8 @@ return [
                 'annotations' => [
                     base_path('app'),
                 ],
+
+                app_path('Http/OpenApi'),
             ],
         ],
     ],
