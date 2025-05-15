@@ -3897,7 +3897,7 @@
                     "Service Orders"
                 ],
                 "summary": "Get Service Orders by Service Provider ID",
-                "description": "Retrieves all service orders assigned to a specific service provider.",
+                "description": "Retrieves all service orders assigned to a specific service provider, including full user information.",
                 "operationId": "getServiceOrdersByServiceProviderId",
                 "parameters": [
                     {
@@ -3980,6 +3980,50 @@
                                                             "full_name": {
                                                                 "type": "string",
                                                                 "example": "Jane Doe"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": "jane.doe@example.com"
+                                                            },
+                                                            "phone_number": {
+                                                                "type": "string",
+                                                                "example": "1234567890",
+                                                                "nullable": true
+                                                            },
+                                                            "role": {
+                                                                "type": "string",
+                                                                "example": "user"
+                                                            },
+                                                            "picture": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "address": {
+                                                                "type": "string",
+                                                                "example": "123 Algiers St, Algiers, Algeria",
+                                                                "nullable": true
+                                                            },
+                                                            "city": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "email_verified_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-12T12:48:11.000000Z",
+                                                                "nullable": true
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-01T10:00:00.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-01T10:00:00.000000Z"
                                                             }
                                                         },
                                                         "type": "object"
@@ -3996,9 +4040,57 @@
                                                             },
                                                             "user": {
                                                                 "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
                                                                     "full_name": {
                                                                         "type": "string",
                                                                         "example": "Hadj Ben"
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": "hadj.ben@example.com"
+                                                                    },
+                                                                    "phone_number": {
+                                                                        "type": "string",
+                                                                        "example": "0987654321",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "role": {
+                                                                        "type": "string",
+                                                                        "example": "service_provider"
+                                                                    },
+                                                                    "picture": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "address": {
+                                                                        "type": "string",
+                                                                        "example": "456 Algiers St, Algiers, Algeria",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "city": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "email_verified_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2025-05-12T12:48:11.000000Z",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2025-05-01T10:00:00.000000Z"
+                                                                    },
+                                                                    "updated_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2025-05-01T10:00:00.000000Z"
                                                                     }
                                                                 },
                                                                 "type": "object"
@@ -8198,6 +8290,884 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Failed to retrieve workspaces"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/workspaces/studio/{workspace_id}": {
+            "post": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Update a Studio Workspace",
+                "description": "Updates an existing studio workspace, its associated details, services, and images for the authenticated user.",
+                "operationId": "updateStudio",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the studio workspace to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "business_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "PhotoSnap Studio"
+                                    },
+                                    "phone_number": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "example": "1234567890"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "contact@photosnap.com"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Downtown",
+                                        "nullable": true
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "maxLength": 100,
+                                        "example": "123 Main St"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Professional photography studio",
+                                        "nullable": true
+                                    },
+                                    "opening_hours": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "9AM-5PM",
+                                        "nullable": true
+                                    },
+                                    "picture": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "price_per_hour": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "example": 50
+                                    },
+                                    "price_per_day": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "example": 200
+                                    },
+                                    "studio_service_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nullable": true
+                                    },
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Studio workspace updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Studio workspace updated successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "business_name": {
+                                                    "type": "string",
+                                                    "example": "PhotoSnap Studio"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "studio"
+                                                },
+                                                "phone_number": {
+                                                    "type": "string",
+                                                    "example": "1234567890"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "contact@photosnap.com"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "Downtown",
+                                                    "nullable": true
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "123 Main St"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Professional photography studio",
+                                                    "nullable": true
+                                                },
+                                                "opening_hours": {
+                                                    "type": "string",
+                                                    "example": "9AM-5PM",
+                                                    "nullable": true
+                                                },
+                                                "picture": {
+                                                    "type": "string",
+                                                    "example": "workspace_pictures/studio.jpg",
+                                                    "nullable": true
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-14T23:29:00.000000Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-14T23:29:00.000000Z"
+                                                },
+                                                "studio": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "workspace_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "price_per_hour": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 50
+                                                        },
+                                                        "price_per_day": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 200
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-14T23:29:00.000000Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-14T23:29:00.000000Z"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "images": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "workspace_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "image_url": {
+                                                                "type": "string",
+                                                                "example": "workspace_images/image1.jpg"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-14T23:29:00.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-14T23:29:00.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to update this workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found or not a studio",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspace not found or not a studio"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to update studio workspace"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Delete a Studio Workspace",
+                "description": "Deletes a studio workspace and its associated data (studio details and images) for the authenticated user.",
+                "operationId": "deleteStudio",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the studio workspace to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Studio workspace deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Studio workspace deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to delete this workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found or not a studio",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspace not found or not a studio"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to delete studio workspace"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/workspaces/coworking/{workspace_id}": {
+            "post": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Update a Coworking Workspace",
+                "description": "Updates an existing coworking workspace and its associated details for the authenticated user.",
+                "operationId": "updateCoworking",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the coworking workspace to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "business_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "WorkHub Coworking"
+                                    },
+                                    "phone_number": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "example": "1234567890"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "info@workhub.com"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Downtown",
+                                        "nullable": true
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "maxLength": 100,
+                                        "example": "456 Elm St"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Modern coworking space",
+                                        "nullable": true
+                                    },
+                                    "opening_hours": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "8AM-6PM",
+                                        "nullable": true
+                                    },
+                                    "picture": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "price_per_day": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "example": 25
+                                    },
+                                    "price_per_month": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "example": 400
+                                    },
+                                    "seating_capacity": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "example": 50
+                                    },
+                                    "meeting_rooms": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Coworking workspace updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Coworking workspace updated successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "business_name": {
+                                                    "type": "string",
+                                                    "example": "WorkHub Coworking"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "coworking"
+                                                },
+                                                "phone_number": {
+                                                    "type": "string",
+                                                    "example": "1234567890"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "info@workhub.com"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "Downtown",
+                                                    "nullable": true
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "456 Elm St"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Modern coworking space",
+                                                    "nullable": true
+                                                },
+                                                "opening_hours": {
+                                                    "type": "string",
+                                                    "example": "8AM-6PM",
+                                                    "nullable": true
+                                                },
+                                                "picture": {
+                                                    "type": "string",
+                                                    "example": "workspace_pictures/coworking.jpg",
+                                                    "nullable": true
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-14T23:17:00.000000Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-14T23:17:00.000000Z"
+                                                },
+                                                "coworking": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "workspace_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "price_per_day": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 25
+                                                        },
+                                                        "price_per_month": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 400
+                                                        },
+                                                        "seating_capacity": {
+                                                            "type": "integer",
+                                                            "example": 50
+                                                        },
+                                                        "meeting_rooms": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-14T23:17:00.000000Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-05-14T23:17:00.000000Z"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to update this workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found or not a coworking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspace not found or not a coworking"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to update coworking workspace"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Delete a Coworking Workspace",
+                "description": "Deletes a coworking workspace and its associated data (coworking details and images) for the authenticated user.",
+                "operationId": "deleteCoworking",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the coworking workspace to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coworking workspace deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Coworking workspace deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to delete this workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found or not a coworking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspace not found or not a coworking"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to delete coworking workspace"
                                         },
                                         "error": {
                                             "type": "string"

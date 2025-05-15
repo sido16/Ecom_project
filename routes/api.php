@@ -129,6 +129,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/workspaces/type/{type}', [WorkspaceController::class, 'getWorkspacesByType']);
         Route::get('/workspaces/{workspace_id}', [WorkspaceController::class, 'getWorkspaceById'])->whereNumber('workspace_id');
         Route::get('/workspaces/user', [WorkspaceController::class, 'getWorkspacesByUser']);
+        Route::delete('/workspaces/studio/{workspace_id}', [WorkspaceController::class, 'deleteStudio']);
+        Route::delete('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'deleteCoworking']);
+        Route::post('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'updateCoworking']);
+        Route::post('/workspaces/studio/{workspace_id}', [WorkspaceController::class, 'updateStudio']);
 });
 
 
@@ -141,6 +145,7 @@ Route::get('/domains', [DomainController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/skills', [SkillsController::class, 'index']);
 Route::get('/skill-domains', [SkillsController::class, 'indexDomains']);
+
 
 
 

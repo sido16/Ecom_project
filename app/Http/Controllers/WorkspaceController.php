@@ -965,4 +965,660 @@ public function getWorkspacesByUser()
         ], 500);
     }
 }
+
+
+/**
+ * @OA\Delete(
+ *     path="/api/workspaces/studio/{workspace_id}",
+ *     summary="Delete a Studio Workspace",
+ *     description="Deletes a studio workspace and its associated data (studio details and images) for the authenticated user.",
+ *     operationId="deleteStudio",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the studio workspace to delete",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Studio workspace deleted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Studio workspace deleted successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to delete this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found or not a studio",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found or not a studio")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to delete studio workspace"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function deleteStudio(Request $request, $workspace_id)
+{
+    try {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->where('type', 'studio')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found or not a studio',
+            ], 404);
+        }
+
+        // Perform deletion in a transaction
+        DB::transaction(function () use ($workspace) {
+            // Delete associated studio (cascades to offered_services via DB constraints)
+            $workspace->studio()->delete();
+            // Delete associated images
+            $workspace->images()->delete();
+            // Soft delete the workspace
+            $workspace->delete();
+        });
+
+        Log::info("Deleted studio workspace ID {$workspace_id} for user ID " . Auth::id());
+
+        return response()->json([
+            'message' => 'Studio workspace deleted successfully',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to delete studio workspace ID {$workspace_id} for user ID " . Auth::id() . ": " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to delete studio workspace',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
+
+/**
+ * @OA\Delete(
+ *     path="/api/workspaces/coworking/{workspace_id}",
+ *     summary="Delete a Coworking Workspace",
+ *     description="Deletes a coworking workspace and its associated data (coworking details and images) for the authenticated user.",
+ *     operationId="deleteCoworking",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the coworking workspace to delete",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Coworking workspace deleted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Coworking workspace deleted successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to delete this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found or not a coworking",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found or not a coworking")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to delete coworking workspace"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function deleteCoworking(Request $request, $workspace_id)
+{
+    try {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->where('type', 'coworking')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found or not a coworking',
+            ], 404);
+        }
+
+        // Perform deletion in a transaction
+        DB::transaction(function () use ($workspace) {
+            // Delete associated coworking
+            $workspace->coworking()->delete();
+            // Delete associated images
+            $workspace->images()->delete();
+            // Soft delete the workspace
+            $workspace->delete();
+        });
+
+        Log::info("Deleted coworking workspace ID {$workspace_id} for user ID " . Auth::id());
+
+        return response()->json([
+            'message' => 'Coworking workspace deleted successfully',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to delete coworking workspace ID {$workspace_id} for user ID " . Auth::id() . ": " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to delete coworking workspace',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
+
+
+/**
+ * @OA\post(
+ *     path="/api/workspaces/coworking/{workspace_id}",
+ *     summary="Update a Coworking Workspace",
+ *     description="Updates an existing coworking workspace and its associated details for the authenticated user.",
+ *     operationId="updateCoworking",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the coworking workspace to update",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="business_name", type="string", example="WorkHub Coworking", maxLength=255),
+ *             @OA\Property(property="phone_number", type="string", example="1234567890", maxLength=50),
+ *             @OA\Property(property="email", type="string", example="info@workhub.com", maxLength=255),
+ *             @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *             @OA\Property(property="address", type="string", example="456 Elm St", maxLength=100),
+ *             @OA\Property(property="description", type="string", example="Modern coworking space", nullable=true),
+ *             @OA\Property(property="opening_hours", type="string", example="8AM-6PM", maxLength=255, nullable=true),
+ *             @OA\Property(property="picture", type="string", format="binary", nullable=true),
+ *             @OA\Property(property="price_per_day", type="number", format="float", example=25.00, minimum=0),
+ *             @OA\Property(property="price_per_month", type="number", format="float", example=400.00, minimum=0),
+ *             @OA\Property(property="seating_capacity", type="integer", example=50, minimum=1),
+ *             @OA\Property(property="meeting_rooms", type="integer", example=3, minimum=0)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Coworking workspace updated successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Coworking workspace updated successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="business_name", type="string", example="WorkHub Coworking"),
+ *                 @OA\Property(property="type", type="string", example="coworking"),
+ *                 @OA\Property(property="phone_number", type="string", example="1234567890"),
+ *                 @OA\Property(property="email", type="string", example="info@workhub.com"),
+ *                 @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *                 @OA\Property(property="address", type="string", example="456 Elm St"),
+ *                 @OA\Property(property="description", type="string", example="Modern coworking space", nullable=true),
+ *                 @OA\Property(property="opening_hours", type="string", example="8AM-6PM", nullable=true),
+ *                 @OA\Property(property="picture", type="string", example="workspace_pictures/coworking.jpg", nullable=true),
+ *                 @OA\Property(property="is_active", type="boolean", example=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-14T23:17:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-14T23:17:00.000000Z"),
+ *                 @OA\Property(
+ *                     property="coworking",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="price_per_day", type="number", format="float", example=25.00),
+ *                     @OA\Property(property="price_per_month", type="number", format="float", example=400.00),
+ *                     @OA\Property(property="seating_capacity", type="integer", example=50),
+ *                     @OA\Property(property="meeting_rooms", type="integer", example=3),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-14T23:17:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-14T23:17:00.000000Z")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to update this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found or not a coworking",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found or not a coworking")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Validation error"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to update coworking workspace"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function updateCoworking(Request $request, $workspace_id)
+{
+    try {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->where('type', 'coworking')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found or not a coworking',
+            ], 404);
+        }
+
+        // Validate request data
+        $request->validate([
+            'business_name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:50|unique:workspaces,phone_number,' . $workspace->id,
+            'email' => 'required|email|max:255|unique:workspaces,email,' . $workspace->id,
+            'location' => 'nullable|string',
+            'address' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'opening_hours' => 'nullable|string|max:255',
+            'picture' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+            'price_per_day' => 'required|numeric|min:0',
+            'price_per_month' => 'required|numeric|min:0',
+            'seating_capacity' => 'required|integer|min:1',
+            'meeting_rooms' => 'required|integer|min:0',
+        ]);
+
+        return DB::transaction(function () use ($request, $workspace) {
+            // Handle picture upload
+            $picturePath = $workspace->picture;
+            if ($request->hasFile('picture')) {
+                // Delete old picture if exists
+                if ($picturePath) {
+                    Storage::disk('public')->delete($picturePath);
+                }
+                $picturePath = $request->file('picture')->store('workspace_pictures', 'public');
+            }
+
+            // Update workspace
+            $workspace->update([
+                'business_name' => $request->business_name,
+                'phone_number' => $request->phone_number,
+                'email' => $request->email,
+                'location' => $request->location,
+                'address' => $request->address,
+                'description' => $request->description,
+                'opening_hours' => $request->opening_hours,
+                'picture' => $picturePath,
+            ]);
+
+            // Update coworking details
+            $workspace->coworking()->update([
+                'price_per_day' => $request->price_per_day,
+                'price_per_month' => $request->price_per_month,
+                'seating_capacity' => $request->seating_capacity,
+                'meeting_rooms' => $request->meeting_rooms,
+            ]);
+
+            Log::info("Coworking workspace updated: ID {$workspace->id}, User ID: " . Auth::id());
+
+            return response()->json([
+                'message' => 'Coworking workspace updated successfully',
+                'data' => $workspace->load('coworking'),
+            ], 200);
+        });
+    } catch (ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation error',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (QueryException $e) {
+        Log::error("Failed to update coworking workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update coworking workspace',
+            'error' => 'Database error occurred',
+        ], 500);
+    } catch (\Exception $e) {
+        Log::error("Failed to update coworking workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update coworking workspace',
+            'error' => 'Storage error occurred',
+        ], 500);
+    }
+}
+
+
+/**
+ * @OA\post(
+ *     path="/api/workspaces/studio/{workspace_id}",
+ *     summary="Update a Studio Workspace",
+ *     description="Updates an existing studio workspace, its associated details, services, and images for the authenticated user.",
+ *     operationId="updateStudio",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the studio workspace to update",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="business_name", type="string", example="PhotoSnap Studio", maxLength=255),
+ *             @OA\Property(property="phone_number", type="string", example="1234567890", maxLength=50),
+ *             @OA\Property(property="email", type="string", example="contact@photosnap.com", maxLength=255),
+ *             @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *             @OA\Property(property="address", type="string", example="123 Main St", maxLength=100),
+ *             @OA\Property(property="description", type="string", example="Professional photography studio", nullable=true),
+ *             @OA\Property(property="opening_hours", type="string", example="9AM-5PM", maxLength=255, nullable=true),
+ *             @OA\Property(property="picture", type="string", format="binary", nullable=true),
+ *             @OA\Property(property="price_per_hour", type="number", format="float", example=50.00, minimum=0),
+ *             @OA\Property(property="price_per_day", type="number", format="float", example=200.00, minimum=0),
+ *             @OA\Property(
+ *                 property="studio_service_ids",
+ *                 type="array",
+ *                 nullable=true,
+ *                 @OA\Items(type="integer", example=1)
+ *             ),
+ *             @OA\Property(
+ *                 property="images",
+ *                 type="array",
+ *                 nullable=true,
+ *                 @OA\Items(type="string", format="binary")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Studio workspace updated successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Studio workspace updated successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="business_name", type="string", example="PhotoSnap Studio"),
+ *                 @OA\Property(property="type", type="string", example="studio"),
+ *                 @OA\Property(property="phone_number", type="string", example="1234567890"),
+ *                 @OA\Property(property="email", type="string", example="contact@photosnap.com"),
+ *                 @OA\Property(property="location", type="string", example="Downtown", nullable=true),
+ *                 @OA\Property(property="address", type="string", example="123 Main St"),
+ *                 @OA\Property(property="description", type="string", example="Professional photography studio", nullable=true),
+ *                 @OA\Property(property="opening_hours", type="string", example="9AM-5PM", nullable=true),
+ *                 @OA\Property(property="picture", type="string", example="workspace_pictures/studio.jpg", nullable=true),
+ *                 @OA\Property(property="is_active", type="boolean", example=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z"),
+ *                 @OA\Property(
+ *                     property="studio",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="workspace_id", type="integer", example=1),
+ *                     @OA\Property(property="price_per_hour", type="number", format="float", example=50.00),
+ *                     @OA\Property(property="price_per_day", type="number", format="float", example=200.00),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="images",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="workspace_id", type="integer", example=1),
+ *                         @OA\Property(property="image_url", type="string", example="workspace_images/image1.jpg"),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-14T23:29:00.000000Z")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized action",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to update this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found or not a studio",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found or not a studio")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Validation error"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to update studio workspace"),
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function updateStudio(Request $request, $workspace_id)
+{
+    try {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->where('type', 'studio')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found or not a studio',
+            ], 404);
+        }
+
+        // Validate request data
+        $request->validate([
+            'business_name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:50|unique:workspaces,phone_number,' . $workspace->id,
+            'email' => 'required|email|max:255|unique:workspaces,email,' . $workspace->id,
+            'location' => 'nullable|string',
+            'address' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'opening_hours' => 'nullable|string|max:255',
+            'picture' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+            'price_per_hour' => 'required|numeric|min:0',
+            'price_per_day' => 'required|numeric|min:0',
+            'studio_service_ids' => 'sometimes|array|min:1',
+            'studio_service_ids.*' => 'exists:studio_services,id',
+        ]);
+
+        return DB::transaction(function () use ($request, $workspace) {
+            // Handle picture upload
+            $picturePath = $workspace->picture;
+            if ($request->hasFile('picture')) {
+                // Delete old picture if exists
+                if ($picturePath) {
+                    Storage::disk('public')->delete($picturePath);
+                }
+                $picturePath = $request->file('picture')->store('workspace_pictures', 'public');
+            }
+
+            // Update workspace
+            $workspace->update([
+                'business_name' => $request->business_name,
+                'phone_number' => $request->phone_number,
+                'email' => $request->email,
+                'location' => $request->location,
+                'address' => $request->address,
+                'description' => $request->description,
+                'opening_hours' => $request->opening_hours,
+                'picture' => $picturePath,
+            ]);
+
+            // Update studio details
+            $workspace->studio()->update([
+                'price_per_hour' => $request->price_per_hour,
+                'price_per_day' => $request->price_per_day,
+            ]);
+
+            // Update studio services if provided
+            if ($request->has('studio_service_ids')) {
+                $workspace->studio->services()->sync($request->studio_service_ids);
+            }
+
+            // Update images if provided (replace existing images)
+            if ($request->hasFile('images')) {
+                // Delete existing images
+                foreach ($workspace->images as $image) {
+                    Storage::disk('public')->delete($image->image_url);
+                    $image->delete();
+                }
+                // Store new images
+                foreach ($request->file('images') as $image) {
+                    WorkspaceImage::create([
+                        'workspace_id' => $workspace->id,
+                        'image_url' => $image->store('workspace_images', 'public'),
+                    ]);
+                }
+            }
+
+            Log::info("Studio workspace updated: ID {$workspace->id}, User ID: " . Auth::id());
+
+            return response()->json([
+                'message' => 'Studio workspace updated successfully',
+                'data' => $workspace->load(['studio', 'images']),
+            ], 200);
+        });
+    } catch (ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation error',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (QueryException $e) {
+        Log::error("Failed to update studio workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update studio workspace',
+            'error' => 'Database error occurred',
+        ], 500);
+    } catch (\Exception $e) {
+        Log::error("Failed to update studio workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to update studio workspace',
+            'error' => 'Storage error occurred',
+        ], 500);
+    }
+}
 }

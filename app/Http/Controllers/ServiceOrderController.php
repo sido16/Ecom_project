@@ -546,7 +546,7 @@ public function getByUser($user_id)
  * @OA\Get(
  *     path="/api/service-orders/service-provider/{service_provider_id}",
  *     summary="Get Service Orders by Service Provider ID",
- *     description="Retrieves all service orders assigned to a specific service provider.",
+ *     description="Retrieves all service orders assigned to a specific service provider, including full user information.",
  *     operationId="getServiceOrdersByServiceProviderId",
  *     tags={"Service Orders"},
  *     @OA\Parameter(
@@ -581,7 +581,16 @@ public function getByUser($user_id)
  *                         property="user",
  *                         type="object",
  *                         @OA\Property(property="id", type="integer", example=2),
- *                         @OA\Property(property="full_name", type="string", example="Jane Doe")
+ *                         @OA\Property(property="full_name", type="string", example="Jane Doe"),
+ *                         @OA\Property(property="email", type="string", example="jane.doe@example.com"),
+ *                         @OA\Property(property="phone_number", type="string", example="1234567890", nullable=true),
+ *                         @OA\Property(property="role", type="string", example="user"),
+ *                         @OA\Property(property="picture", type="string", example=null, nullable=true),
+ *                         @OA\Property(property="address", type="string", example="123 Algiers St, Algiers, Algeria", nullable=true),
+ *                         @OA\Property(property="city", type="string", example=null, nullable=true),
+ *                         @OA\Property(property="email_verified_at", type="string", format="date-time", example="2025-05-12T12:48:11.000000Z", nullable=true),
+ *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-01T10:00:00.000000Z"),
+ *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-01T10:00:00.000000Z")
  *                     ),
  *                     @OA\Property(
  *                         property="service_provider",
@@ -591,7 +600,17 @@ public function getByUser($user_id)
  *                         @OA\Property(
  *                             property="user",
  *                             type="object",
- *                             @OA\Property(property="full_name", type="string", example="Hadj Ben")
+ *                             @OA\Property(property="id", type="integer", example=1),
+ *                             @OA\Property(property="full_name", type="string", example="Hadj Ben"),
+ *                             @OA\Property(property="email", type="string", example="hadj.ben@example.com"),
+ *                             @OA\Property(property="phone_number", type="string", example="0987654321", nullable=true),
+ *                             @OA\Property(property="role", type="string", example="service_provider"),
+ *                             @OA\Property(property="picture", type="string", example=null, nullable=true),
+ *                             @OA\Property(property="address", type="string", example="456 Algiers St, Algiers, Algeria", nullable=true),
+ *                             @OA\Property(property="city", type="string", example=null, nullable=true),
+ *                             @OA\Property(property="email_verified_at", type="string", format="date-time", example="2025-05-12T12:48:11.000000Z", nullable=true),
+ *                             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-01T10:00:00.000000Z"),
+ *                             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-01T10:00:00.000000Z")
  *                         )
  *                     ),
  *                     @OA\Property(
@@ -638,9 +657,7 @@ public function getByServiceProvider($service_provider_id)
         }
 
         $orders = ServiceOrder::with([
-            'user' => function ($query) {
-                $query->select('id', 'full_name');
-            },
+            'user' ,
             'serviceProvider.user' => function ($query) {
                 $query->select('id', 'full_name');
             },
