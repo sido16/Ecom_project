@@ -804,6 +804,14 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "product_id",
+                                    "quantity",
+                                    "full_name",
+                                    "phone_number",
+                                    "wilaya_id",
+                                    "commune_id"
+                                ],
                                 "properties": {
                                     "product_id": {
                                         "description": "The ID of the product to purchase",
@@ -814,6 +822,32 @@
                                         "description": "The quantity to purchase",
                                         "type": "integer",
                                         "example": 2
+                                    },
+                                    "full_name": {
+                                        "description": "Buyer's full name",
+                                        "type": "string",
+                                        "example": "Ahmed Benali"
+                                    },
+                                    "phone_number": {
+                                        "description": "Phone number",
+                                        "type": "string",
+                                        "example": "+213661234567"
+                                    },
+                                    "address": {
+                                        "description": "Address",
+                                        "type": "string",
+                                        "example": "123 Rue El Mokrani, Algiers",
+                                        "nullable": true
+                                    },
+                                    "wilaya_id": {
+                                        "description": "Wilaya ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "commune_id": {
+                                        "description": "Commune ID",
+                                        "type": "integer",
+                                        "example": 3
                                     }
                                 },
                                 "type": "object"
@@ -866,7 +900,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "The product_id field is required"
+                                            "example": "Validation error"
                                         },
                                         "errors": {
                                             "type": "object"
@@ -886,13 +920,17 @@
                     "Orders"
                 ],
                 "summary": "Add to Cart",
-                "description": "Adds a product to an unvalidated order (cart). If an unvalidated order exists, adds the product to it; otherwise, creates a new order.",
+                "description": "Adds a product to an unvalidated order (cart). If an unvalidated order exists for the same supplier, it will be reused; otherwise, a new one is created.",
                 "operationId": "addToCart",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "product_id",
+                                    "quantity"
+                                ],
                                 "properties": {
                                     "product_id": {
                                         "description": "The ID of the product to add",
@@ -969,39 +1007,78 @@
                 }
             }
         },
-        "/api/orders/{orderId}/validate": {
+        "/api/orders/validate-cart": {
             "put": {
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Validate Cart",
-                "description": "Validates an unvalidated cart (order) by setting it to validated and updating its status to processing.",
+                "summary": "Validate All Carts",
+                "description": "Validates all unvalidated cart orders for the current user by setting them to validated and updating customer information.",
                 "operationId": "validateCart",
-                "parameters": [
-                    {
-                        "name": "orderId",
-                        "in": "path",
-                        "description": "The ID of the order to validate",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "full_name",
+                                    "phone_number",
+                                    "wilaya_id",
+                                    "commune_id"
+                                ],
+                                "properties": {
+                                    "full_name": {
+                                        "description": "Customer's full name",
+                                        "type": "string",
+                                        "example": "Ahmed Benali"
+                                    },
+                                    "phone_number": {
+                                        "description": "Customer's phone number",
+                                        "type": "string",
+                                        "example": "+213661234567"
+                                    },
+                                    "address": {
+                                        "description": "Customer's address",
+                                        "type": "string",
+                                        "example": "123 Rue El Mokrani, Algiers",
+                                        "nullable": true
+                                    },
+                                    "wilaya_id": {
+                                        "description": "Wilaya ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "commune_id": {
+                                        "description": "Commune ID",
+                                        "type": "integer",
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Cart validated successfully",
+                        "description": "All carts validated successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Cart validated successfully"
+                                            "example": "All carts validated successfully"
                                         },
-                                        "order_id": {
-                                            "type": "integer",
-                                            "example": 1
+                                        "order_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            },
+                                            "example": [
+                                                1,
+                                                2
+                                            ]
                                         }
                                     },
                                     "type": "object"
@@ -1010,14 +1087,33 @@
                         }
                     },
                     "404": {
-                        "description": "Order not found or not eligible for validation",
+                        "description": "No orders to validate",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Order not found"
+                                            "example": "No orders to validate"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

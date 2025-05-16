@@ -11,15 +11,20 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'supplier_id',
+        'wilaya_id',
+        'commune_id',
+        'full_name',
+        'phone_number',
         'status',
         'total_amount',
         'order_date',
         'is_validated',
+        'address',
     ];
 
     protected $casts = [
         'status' => 'string',
-        'total_amount' => 'decimal:2',
         'order_date' => 'datetime',
         'is_validated' => 'boolean',
     ];
@@ -27,6 +32,21 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function wilaya()
+    {
+        return $this->belongsTo(Wilaya::class);
+    }
+
+    public function commune()
+    {
+        return $this->belongsTo(Commune::class);
     }
 
     public function orderProducts()

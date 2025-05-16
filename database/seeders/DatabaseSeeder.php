@@ -4,7 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
+use Database\Seeders\CommuneSeeder;
+use Database\Seeders\WilayaSeeder;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,6 +25,8 @@ class DatabaseSeeder extends Seeder
             SkillDomainSeeder::class,
             SkillSeeder::class,
             StudioServiceSeeder::class,
+            WilayaSeeder::class,
+            CommuneSeeder::class,
         ]);
     }
 }

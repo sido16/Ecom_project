@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('orders')->group(function () {
         Route::post('/buy-now', [OrderController::class, 'buyNow']);
         Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
-        Route::put('/{orderId}/validate', [OrderController::class, 'validateCart']);
+        Route::put('/validate-cart', [OrderController::class, 'validateCart']);
         Route::get('/cart', [OrderController::class, 'getCart']);
         Route::put('/cart/update', [OrderController::class, 'updateCart']);
         Route::delete('/cart/remove/{product_id}', [OrderController::class, 'removeFromCart'])->whereNumber('product_id');
