@@ -91,6 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cart', [OrderController::class, 'getCart']);
         Route::put('/cart/update', [OrderController::class, 'updateCart']);
         Route::delete('/cart/remove/{product_id}', [OrderController::class, 'removeFromCart'])->whereNumber('product_id');
+        Route::delete('/cart/clear', [OrderController::class, 'clearCart']);
+
     });
 
     //service_providers

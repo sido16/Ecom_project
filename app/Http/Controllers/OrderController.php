@@ -284,12 +284,11 @@ public function buyNow(Request $request)
     }
     
 
-    
-    /**
+/**
  * @OA\Get(
  *     path="/api/orders/cart",
  *     summary="Get User Cart",
- *     description="Retrieves the authenticated user's current cart with items.",
+ *     description="Retrieves all unvalidated cart orders for the authenticated user, grouped by supplier.",
  *     operationId="getUserCart",
  *     tags={"Cart"},
  *     @OA\Response(
@@ -297,31 +296,66 @@ public function buyNow(Request $request)
  *         description="Cart retrieved successfully",
  *         @OA\JsonContent(
  *             type="object",
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="total_price", type="number", example=35.00),
- *                 @OA\Property(property="items", type="array", @OA\Items(
- *                     @OA\Property(property="id", type="integer", example=1),
- *                     @OA\Property(property="product_id", type="integer", example=1),
- *                     @OA\Property(property="quantity", type="integer", example=2),
- *                     @OA\Property(property="price", type="number", example=10.00),
- *                     @OA\Property(property="product", type="object",
- *                         @OA\Property(property="id", type="integer", example=1),
- *                         @OA\Property(property="name", type="string", example="Red T-shirt"),
- *                         @OA\Property(property="pictures", type="array", @OA\Items(
+ *             @OA\Property(property="message", type="string", example="Cart retrieved successfully"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=3),
+ *                     @OA\Property(property="user_id", type="integer", example=2),
+ *                     @OA\Property(property="supplier_id", type="integer", example=1),
+ *                     @OA\Property(property="wilaya_id", type="integer", example=1),
+ *                     @OA\Property(property="commune_id", type="integer", example=3),
+ *                     @OA\Property(property="full_name", type="string", example="Ahmed Benali"),
+ *                     @OA\Property(property="phone_number", type="string", example="+213661234567"),
+ *                     @OA\Property(property="address", type="string", example="123 Rue El Mokrani, Algiers"),
+ *                     @OA\Property(property="status", type="string", example="processing"),
+ *                     @OA\Property(property="order_date", type="string", format="date-time", example="2025-05-16T14:38:14.000000Z"),
+ *                     @OA\Property(property="is_validated", type="boolean", example=false),
+ *                     @OA\Property(property="created_at", type="string", format="date-time"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+ *                     @OA\Property(
+ *                         property="order_products",
+ *                         type="array",
+ *                         @OA\Items(
+ *                             type="object",
  *                             @OA\Property(property="id", type="integer", example=1),
- *                             @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg")
- *                         ))
+ *                             @OA\Property(property="order_id", type="integer", example=3),
+ *                             @OA\Property(property="product_id", type="integer", example=1),
+ *                             @OA\Property(property="quantity", type="integer", example=4),
+ *                             @OA\Property(property="unit_price", type="string", example="333.00"),
+ *                             @OA\Property(
+ *                                 property="product",
+ *                                 type="object",
+ *                                 @OA\Property(property="id", type="integer", example=1),
+ *                                 @OA\Property(property="supplier_id", type="integer", example=1),
+ *                                 @OA\Property(property="category_id", type="integer", example=1),
+ *                                 @OA\Property(property="name", type="string", example="Smartphone"),
+ *                                 @OA\Property(property="price", type="string", example="333.00"),
+ *                                 @OA\Property(property="description", type="string", example="good"),
+ *                                 @OA\Property(property="visibility", type="string", example="public"),
+ *                                 @OA\Property(property="quantity", type="integer", example=20),
+ *                                 @OA\Property(property="minimum_quantity", type="integer", example=10),
+ *                                 @OA\Property(property="created_at", type="string", format="date-time"),
+ *                                 @OA\Property(property="updated_at", type="string", format="date-time"),
+ *                                 @OA\Property(
+ *                                     property="pictures",
+ *                                     type="array",
+ *                                     @OA\Items(
+ *                                         type="object",
+ *                                         @OA\Property(property="id", type="integer", example=1),
+ *                                         @OA\Property(property="product_id", type="integer", example=1),
+ *                                         @OA\Property(property="picture", type="string", example="product_pictures/example.png"),
+ *                                         @OA\Property(property="created_at", type="string", format="date-time"),
+ *                                         @OA\Property(property="updated_at", type="string", format="date-time")
+ *                                     )
+ *                                 )
+ *                             )
+ *                         )
  *                     )
- *                 ))
+ *                 )
  *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Cart not found",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Cart not found")
  *         )
  *     ),
  *     @OA\Response(
@@ -335,29 +369,38 @@ public function buyNow(Request $request)
  *     security={{"sanctum": {}}}
  * )
  */
+
 public function getCart(Request $request)
 {
     try {
         $user = Auth::user();
-        $cart = Order::where('user_id', $user->id)
+
+        // Get all unvalidated orders (carts) for this user
+        $carts = Order::where('user_id', $user->id)
             ->where('is_validated', false)
             ->with(['orderProducts.product.pictures'])
-            ->first();
+            ->get();
 
-        if (!$cart) {
+        if ($carts->isEmpty()) {
             return response()->json([
-                'message' => 'Cart not found'
-            ], 404);
+                'message' => 'Cart is empty',
+                'data'    => []
+            ], 200);
         }
 
-        return response()->json(['data' => $cart], 200);
+        return response()->json([
+            'message' => 'Cart retrieved successfully',
+            'data'    => $carts
+        ], 200);
+
     } catch (\Exception $e) {
         return response()->json([
             'message' => 'Failed to retrieve cart',
-            'error' => 'Database error occurred'
+            'error'   => 'Database error occurred'
         ], 500);
     }
 }
+
 
 /**
  * @OA\Put(
@@ -411,83 +454,97 @@ public function getCart(Request $request)
 public function updateCart(Request $request)
 {
     $request->validate([
+        'order_id'   => 'required|integer|exists:orders,id',
         'product_id' => 'required|integer|exists:products,id',
-        'quantity' => 'required|integer|min:1',
+        'quantity'   => 'required|integer|min:1',
+    ]);
+    $order = Order::where('id', $request->order_id)
+        ->where('user_id', Auth::id())
+        ->where('is_validated', false)
+        ->first();
+
+    Log::info('Cart update - Order lookup result', [
+        'user_id'   => Auth::id(),
+        'order_id'  => $request->order_id,
+        'order'     => $order
     ]);
 
+    if (!$order) {
+        return response()->json([
+            'message' => 'Cart not found or already validated',
+        ], 404);
+    }
+
     try {
-        return DB::transaction(function () use ($request) {
-            $order = Order::where('user_id', Auth::id())
-                ->where('is_validated', false)
-                ->first();
-
-            if (!$order) {
-                return response()->json(['message' => 'Cart not found'], 404);
-            }
-
+        return DB::transaction(function () use ($request, $order) {
             $orderProduct = OrderProduct::where('order_id', $order->id)
                 ->where('product_id', $request->product_id)
                 ->first();
 
             if (!$orderProduct) {
-                return response()->json(['message' => 'Product not found in cart'], 404);
+                return response()->json([
+                    'message' => 'Product not found in cart',
+                ], 404);
             }
 
-            $product = Product::findOrFail($request->product_id);
-            $oldQuantity = $orderProduct->quantity;
             $orderProduct->quantity = $request->quantity;
             $orderProduct->save();
 
-            $order->total_amount += ($request->quantity - $oldQuantity) * $product->price;
-            $order->save();
-
-            return response()->json(['message' => 'Product quantity updated', 'order_id' => $order->id], 200);
+            return response()->json([
+                'message'  => 'Product quantity updated',
+                'order_id' => $order->id
+            ], 200);
         });
     } catch (\Exception $e) {
         return response()->json([
             'message' => 'Failed to update cart',
-            'error' => 'Database error occurred'
+            'error'   => 'Database error occurred'
         ], 500);
     }
-}/**
-     * @OA\Delete(
-     *     path="/api/orders/cart/remove/{product_id}",
-     *     summary="Remove Product from Cart",
-     *     description="Removes a product from the authenticated user's cart.",
-     *     operationId="removeCartProduct",
-     *     tags={"Cart"},
-     *     @OA\Parameter(
-     *         name="product_id",
-     *         in="path",
-     *         description="ID of the product to remove",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Product removed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product removed from cart")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Cart or product not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Cart or product not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Failed to remove product"),
-     *             @OA\Property(property="error", type="string", example="Database error occurred")
-     *         )
-     *     ),
-     *     security={{"sanctum": {}}}
-     * )
-     */
+}
+
+
+
+/**
+ * @OA\Delete(
+ *     path="/api/orders/cart/remove/{product_id}",
+ *     summary="Remove Product from Cart",
+ *     description="Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty.",
+ *     operationId="removeCartProduct",
+ *     tags={"Cart"},
+ *     @OA\Parameter(
+ *         name="product_id",
+ *         in="path",
+ *         description="ID of the product to remove",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Product removed successfully or cart deleted if empty",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Product removed from cart")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Cart or product not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Cart not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to remove product"),
+ *             @OA\Property(property="error", type="string", example="Database error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+
     public function removeFromCart($product_id)
     {
         try {
@@ -508,7 +565,6 @@ public function updateCart(Request $request)
                     return response()->json(['message' => 'Product not found in cart'], 404);
                 }
 
-                $order->total_amount -= $orderProduct->quantity * $orderProduct->unit_price;
                 $orderProduct->delete();
                 $order->save();
 
@@ -525,6 +581,67 @@ public function updateCart(Request $request)
             ], 500);
         }
     }
+
+
+    /**
+ * @OA\Delete(
+ *     path="/api/orders/cart/clear",
+ *     summary="Clear Cart",
+ *     description="Deletes all non-validated orders and their products for the authenticated user.",
+ *     operationId="clearCart",
+ *     tags={"Cart"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Cart cleared successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Cart cleared successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="No active cart found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="No active cart to clear")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to clear cart"),
+ *             @OA\Property(property="error", type="string", example="Database error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function clearCart()
+{
+    try {
+        return DB::transaction(function () {
+            $orders = Order::where('user_id', Auth::id())
+                ->where('is_validated', false)
+                ->get();
+
+            if ($orders->isEmpty()) {
+                return response()->json(['message' => 'No active cart to clear'], 404);
+            }
+
+            foreach ($orders as $order) {
+                $order->orderProducts()->delete();
+                $order->delete();
+            }
+
+            return response()->json(['message' => 'Cart cleared successfully'], 200);
+        });
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to clear cart',
+            'error' => 'Database error occurred'
+        ], 500);
+    }
+}
+
 
 
 }

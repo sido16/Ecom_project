@@ -1130,7 +1130,7 @@
                     "Cart"
                 ],
                 "summary": "Get User Cart",
-                "description": "Retrieves the authenticated user's current cart with items.",
+                "description": "Retrieves all unvalidated cart orders for the authenticated user, grouped by supplier.",
                 "operationId": "getUserCart",
                 "responses": {
                     "200": {
@@ -1139,87 +1139,175 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "total_price": {
-                                                    "type": "number",
-                                                    "example": 35
-                                                },
-                                                "items": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "product_id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "quantity": {
-                                                                "type": "integer",
-                                                                "example": 2
-                                                            },
-                                                            "price": {
-                                                                "type": "number",
-                                                                "example": 10
-                                                            },
-                                                            "product": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "integer",
-                                                                        "example": 1
-                                                                    },
-                                                                    "name": {
-                                                                        "type": "string",
-                                                                        "example": "Red T-shirt"
-                                                                    },
-                                                                    "pictures": {
-                                                                        "type": "array",
-                                                                        "items": {
-                                                                            "properties": {
-                                                                                "id": {
-                                                                                    "type": "integer",
-                                                                                    "example": 1
-                                                                                },
-                                                                                "picture": {
-                                                                                    "type": "string",
-                                                                                    "example": "/storage/product_pictures/red1.jpg"
-                                                                                }
-                                                                            },
-                                                                            "type": "object"
-                                                                        }
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Cart not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Cart not found"
+                                            "example": "Cart retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "supplier_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "wilaya_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "commune_id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "full_name": {
+                                                        "type": "string",
+                                                        "example": "Ahmed Benali"
+                                                    },
+                                                    "phone_number": {
+                                                        "type": "string",
+                                                        "example": "+213661234567"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "123 Rue El Mokrani, Algiers"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "processing"
+                                                    },
+                                                    "order_date": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-05-16T14:38:14.000000Z"
+                                                    },
+                                                    "is_validated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "order_products": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "order_id": {
+                                                                    "type": "integer",
+                                                                    "example": 3
+                                                                },
+                                                                "product_id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "quantity": {
+                                                                    "type": "integer",
+                                                                    "example": 4
+                                                                },
+                                                                "unit_price": {
+                                                                    "type": "string",
+                                                                    "example": "333.00"
+                                                                },
+                                                                "product": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "supplier_id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "category_id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Smartphone"
+                                                                        },
+                                                                        "price": {
+                                                                            "type": "string",
+                                                                            "example": "333.00"
+                                                                        },
+                                                                        "description": {
+                                                                            "type": "string",
+                                                                            "example": "good"
+                                                                        },
+                                                                        "visibility": {
+                                                                            "type": "string",
+                                                                            "example": "public"
+                                                                        },
+                                                                        "quantity": {
+                                                                            "type": "integer",
+                                                                            "example": 20
+                                                                        },
+                                                                        "minimum_quantity": {
+                                                                            "type": "integer",
+                                                                            "example": 10
+                                                                        },
+                                                                        "created_at": {
+                                                                            "type": "string",
+                                                                            "format": "date-time"
+                                                                        },
+                                                                        "updated_at": {
+                                                                            "type": "string",
+                                                                            "format": "date-time"
+                                                                        },
+                                                                        "pictures": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 1
+                                                                                    },
+                                                                                    "product_id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 1
+                                                                                    },
+                                                                                    "picture": {
+                                                                                        "type": "string",
+                                                                                        "example": "product_pictures/example.png"
+                                                                                    },
+                                                                                    "created_at": {
+                                                                                        "type": "string",
+                                                                                        "format": "date-time"
+                                                                                    },
+                                                                                    "updated_at": {
+                                                                                        "type": "string",
+                                                                                        "format": "date-time"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -1375,7 +1463,7 @@
                     "Cart"
                 ],
                 "summary": "Remove Product from Cart",
-                "description": "Removes a product from the authenticated user's cart.",
+                "description": "Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty.",
                 "operationId": "removeCartProduct",
                 "parameters": [
                     {
@@ -1390,7 +1478,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product removed successfully",
+                        "description": "Product removed successfully or cart deleted if empty",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1413,7 +1501,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Cart or product not found"
+                                            "example": "Cart not found"
                                         }
                                     },
                                     "type": "object"
@@ -1430,6 +1518,75 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Failed to remove product"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Database error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/cart/clear": {
+            "delete": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Clear Cart",
+                "description": "Deletes all non-validated orders and their products for the authenticated user.",
+                "operationId": "clearCart",
+                "responses": {
+                    "200": {
+                        "description": "Cart cleared successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cart cleared successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No active cart found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No active cart to clear"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to clear cart"
                                         },
                                         "error": {
                                             "type": "string",
