@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             StudioServiceSeeder::class,
             WilayaSeeder::class,
             CommuneSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }

@@ -24,6 +24,7 @@ use App\Http\Controllers\WorkspaceController;
 
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Authentication Routes
@@ -135,7 +136,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'deleteCoworking']);
         Route::post('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'updateCoworking']);
         Route::post('/workspaces/studio/{workspace_id}', [WorkspaceController::class, 'updateStudio']);
-});
+
+
+
+        Route::prefix('orders')->group(function () {
+        
+            Route::patch('{id}/status', [OrderController::class, 'updateStatus'])->whereNumber('id');
+            Route::get('{id}', [OrderController::class, 'show'])->whereNumber('id');
+            Route::get('user/{user_id}', [OrderController::class, 'getByUser'])->whereNumber('user_id');
+            Route::get('supplier/{supplier_id}', [OrderController::class, 'getBySupplier'])->whereNumber('supplier_id');
+        
+        });
+        
+
+
+
+
+
+
+ });
 
 
 

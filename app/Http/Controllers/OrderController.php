@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
@@ -10,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\Supplier;
 
 class OrderController extends Controller
 {
@@ -641,6 +640,339 @@ public function clearCart()
         ], 500);
     }
 }
+
+
+
+/**
+ * @OA\Get(
+ *     path="/api/supplier-orders/{id}",
+ *     summary="Get a validated order by ID",
+ *     tags={"Supplier Orders"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="Order ID",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Validated order details",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="user_id", type="integer", example=1),
+ *             @OA\Property(property="supplier_id", type="integer", example=1),
+ *             @OA\Property(property="wilaya_id", type="integer", example=1),
+ *             @OA\Property(property="commune_id", type="integer", example=1),
+ *             @OA\Property(property="full_name", type="string", example="John Doe"),
+ *             @OA\Property(property="phone_number", type="string", example="+213661234567"),
+ *             @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
+ *             @OA\Property(property="status", type="string", enum={"pending", "processing", "delivered"}, example="pending"),
+ *             @OA\Property(property="is_validated", type="boolean", example=true),
+ *             @OA\Property(property="created_at", type="string", format="date-time"),
+ *             @OA\Property(property="updated_at", type="string", format="date-time"),
+ *             @OA\Property(
+ *                 property="order_products",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="order_id", type="integer", example=1),
+ *                     @OA\Property(property="product_id", type="integer", example=1),
+ *                     @OA\Property(property="quantity", type="integer", example=2),
+ *                     @OA\Property(property="unit_price", type="number", format="float", example=99.99)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Not authorized to view this order",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Not authorized to view this order")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Validated order not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Validated order not found")
+ *         )
+ *     )
+ * )
+ */
+
+public function show($id)
+{
+    $order = Order::with(['user', 'supplier', 'wilaya', 'commune', 'orderProducts.product'])
+        ->where('id', $id)
+        ->where('is_validated', true)
+        ->first();
+
+    if (!$order) {
+        return response()->json(['message' => 'Validated order not found'], 404);
+    }
+    if (
+        $order->user_id !== Auth::id() &&
+        $order->supplier_id !== Auth::user()->suppliers()->first()?->id
+    ) {
+        return response()->json(['message' => 'Not authorized to view this order'], 403);
+    }
+
+    return response()->json($order);
+}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/supplier-orders/user/{user_id}",
+ *     summary="Get all orders made by a user",
+ *     tags={"Supplier Orders"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="user_id",
+ *         in="path",
+ *         required=true,
+ *         description="User ID",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of orders",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="supplier_id", type="integer", example=1),
+ *                 @OA\Property(property="wilaya_id", type="integer", example=1),
+ *                 @OA\Property(property="commune_id", type="integer", example=1),
+ *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+ *                 @OA\Property(property="phone_number", type="string", example="+213661234567"),
+ *                 @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
+ *                 @OA\Property(property="status", type="string", enum={"pending", "processing", "delivered"}, example="pending"),
+ *                 @OA\Property(property="is_validated", type="boolean", example=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+ *                 @OA\Property(
+ *                     property="order_products",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="order_id", type="integer", example=1),
+ *                         @OA\Property(property="product_id", type="integer", example=1),
+ *                         @OA\Property(property="quantity", type="integer", example=2),
+ *                         @OA\Property(property="unit_price", type="number", format="float", example=99.99)
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized access",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthorized access")
+ *         )
+ *     )
+ * )
+ */
+
+public function getByUser($user_id)
+{
+    if (auth()->id() !== (int)$user_id) {
+        return response()->json(['message' => 'Unauthorized access'], 403);
+    }
+
+    $orders = Order::with(['supplier', 'wilaya', 'commune', 'orderProducts.product'])
+        ->where('user_id', $user_id)
+        ->get();
+
+    return response()->json($orders);
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/supplier-orders/supplier/{supplier_id}",
+ *     summary="Get all orders received by a supplier",
+ *     tags={"Supplier Orders"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="supplier_id",
+ *         in="path",
+ *         required=true,
+ *         description="Supplier ID",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of supplier's orders",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="user_id", type="integer", example=1),
+ *                 @OA\Property(property="supplier_id", type="integer", example=1),
+ *                 @OA\Property(property="wilaya_id", type="integer", example=1),
+ *                 @OA\Property(property="commune_id", type="integer", example=1),
+ *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+ *                 @OA\Property(property="phone_number", type="string", example="+213661234567"),
+ *                 @OA\Property(property="address", type="string", example="123 Main St", nullable=true),
+ *                 @OA\Property(property="status", type="string", enum={"pending", "processing", "delivered"}, example="pending"),
+ *                 @OA\Property(property="is_validated", type="boolean", example=true),
+ *                 @OA\Property(property="created_at", type="string", format="date-time"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+ *                 @OA\Property(
+ *                     property="order_products",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="order_id", type="integer", example=1),
+ *                         @OA\Property(property="product_id", type="integer", example=1),
+ *                         @OA\Property(property="quantity", type="integer", example=2),
+ *                         @OA\Property(property="unit_price", type="number", format="float", example=99.99)
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized access or supplier not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthorized access or supplier not found")
+ *         )
+ *     )
+ * )
+ */
+
+public function getBySupplier($supplier_id)
+{
+    $supplier = Supplier::where('id', $supplier_id)
+        ->where('user_id', auth()->id())
+        ->first();
+
+    if (!$supplier) {
+        return response()->json(['message' => 'Unauthorized access or supplier not found'], 403);
+    }
+
+    $orders = Order::with(['user', 'wilaya', 'commune', 'orderProducts.product'])
+        ->where('supplier_id', $supplier_id)
+        ->get();
+
+    return response()->json($orders);
+}
+
+/**
+ *     @OA\Patch(
+ *     path="/api/orders/{id}/status",
+ *     summary="Update order status",
+ *     description="Updates the status of a specific order. Only the supplier or the user who placed the order can update it.",
+ *     operationId="updateOrderStatus",
+ *     tags={"Supplier Orders"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="Order ID",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"status"},
+ *             @OA\Property(
+ *                 property="status",
+ *                 type="string",
+ *                 enum={"pending", "processing", "delivered"},
+ *                 description="New status of the order",
+ *                 example="processing"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Order status updated successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Order status updated successfully"),
+ *             @OA\Property(
+ *                 property="order",
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="status", type="string", example="processing"),
+ *                 @OA\Property(property="updated_at", type="string", format="date-time")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Not authorized to update this order",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Not authorized to update this order")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Order not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Order not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The status field is required"),
+ *             @OA\Property(
+ *                 property="errors",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="status",
+ *                     type="array",
+ *                     @OA\Items(type="string", example="The status must be one of: pending, processing, delivered")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:pending,processing,delivered',
+    ]);
+
+    $order = Order::find($id);
+
+    if (!$order) {
+        return response()->json(['message' => 'Order not found'], 404);
+    }
+
+    // Allow only the supplier OR user concerned with the order to update it
+    $user = Auth::user();
+
+    $userSupplierId = $user->suppliers()->first()?->id;
+
+    if ($order->supplier_id !== $userSupplierId && $order->user_id !== $user->id) {
+        return response()->json(['message' => 'Not authorized to update this order'], 403);
+    }
+
+    $order->status = $request->input('status');
+    $order->save();
+
+    return response()->json([
+        'message' => 'Order status updated successfully',
+        'order' => $order,
+    ]);
+}
+
 
 
 
