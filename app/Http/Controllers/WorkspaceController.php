@@ -947,7 +947,7 @@ public function getWorkspacesByUser()
         // Query workspaces for the authenticated user, including studio and coworking details
         $workspaces = Workspace::where('user_id', Auth::id())
             ->where('is_active', true)
-            ->with(['studio', 'coworking'])
+            ->with(['studio', 'coworking', 'images'])
             ->get();
 
         Log::info("Retrieved workspaces for user ID " . Auth::id(), ['count' => $workspaces->count()]);

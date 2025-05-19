@@ -1457,13 +1457,13 @@
                 ]
             }
         },
-        "/api/orders/cart/remove/{product_id}": {
+        "/api/cart/remove/{product_id}": {
             "delete": {
                 "tags": [
                     "Cart"
                 ],
                 "summary": "Remove Product from Cart",
-                "description": "Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty.",
+                "description": "Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty. Optionally accepts an order_id to specify the cart.",
                 "operationId": "removeCartProduct",
                 "parameters": [
                     {
@@ -1476,6 +1476,23 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "order_id": {
+                                        "description": "The ID of the order (cart) to remove the product from",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Product removed successfully or cart deleted if empty",
@@ -1486,6 +1503,22 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Product removed from cart"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Cannot modify a validated order",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cannot modify a validated order"
                                         }
                                     },
                                     "type": "object"
@@ -7724,6 +7757,143 @@
                 }
             }
         },
+        "/api/wilayas": {
+            "get": {
+                "tags": [
+                    "Wilayas"
+                ],
+                "summary": "Get all Wilayas",
+                "description": "Retrieves a list of all Wilayas for populating a dropdown.",
+                "operationId": "getWilayas",
+                "responses": {
+                    "200": {
+                        "description": "Wilayas retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Alger"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve Wilayas"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Database error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wilayas/{wilaya_id}/communes": {
+            "get": {
+                "tags": [
+                    "Wilayas"
+                ],
+                "summary": "Get Communes by Wilaya ID",
+                "description": "Retrieves a list of Communes for a specific Wilaya ID to populate a dropdown.",
+                "operationId": "getCommunesByWilaya",
+                "parameters": [
+                    {
+                        "name": "wilaya_id",
+                        "in": "path",
+                        "description": "ID of the Wilaya",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Communes retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Bab El Oued"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Wilaya not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wilaya not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve Communes"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Database error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/workspaces/studio/create": {
             "post": {
                 "tags": [
@@ -10078,6 +10248,10 @@
         {
             "name": "Suppliers",
             "description": "Suppliers"
+        },
+        {
+            "name": "Wilayas",
+            "description": "Wilayas"
         },
         {
             "name": "Workspaces",

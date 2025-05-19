@@ -14,6 +14,12 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillsController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\WilayaController;
+
+
+ 
+
+
 
 
 
@@ -166,6 +172,8 @@ Route::get('/domains', [DomainController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/skills', [SkillsController::class, 'index']);
 Route::get('/skill-domains', [SkillsController::class, 'indexDomains']);
+Route::get('wilayas', [WilayaController::class, 'index']);
+Route::get('wilayas/{wilaya_id}/communes', [WilayaController::class, 'getCommunes'])->whereNumber('wilaya_id');
 
 
 

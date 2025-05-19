@@ -506,9 +506,9 @@ public function updateCart(Request $request)
 
 /**
  * @OA\Delete(
- *     path="/api/orders/cart/remove/{product_id}",
+ *     path="/api/cart/remove/{product_id}",
  *     summary="Remove Product from Cart",
- *     description="Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty.",
+ *     description="Removes a product from the authenticated user's cart. Deletes the entire cart if it becomes empty. Optionally accepts an order_id to specify the cart.",
  *     operationId="removeCartProduct",
  *     tags={"Cart"},
  *     @OA\Parameter(
@@ -518,11 +518,24 @@ public function updateCart(Request $request)
  *         required=true,
  *         @OA\Schema(type="integer")
  *     ),
+ *     @OA\RequestBody(
+ *         required=false,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="order_id", type="integer", description="The ID of the order (cart) to remove the product from", example=1)
+ *         )
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Product removed successfully or cart deleted if empty",
  *         @OA\JsonContent(
  *             @OA\Property(property="message", type="string", example="Product removed from cart")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Cannot modify a validated order",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Cannot modify a validated order")
  *         )
  *     ),
  *     @OA\Response(
@@ -543,44 +556,47 @@ public function updateCart(Request $request)
  *     security={{"sanctum": {}}}
  * )
  */
-
-    public function removeFromCart($product_id)
-    {
-        try {
-            return DB::transaction(function () use ($product_id) {
-                $order = Order::where('user_id', Auth::id())
-                    ->where('is_validated', false)
-                    ->first();
-
-                if (!$order) {
-                    return response()->json(['message' => 'Cart not found'], 404);
-                }
-
-                $orderProduct = OrderProduct::where('order_id', $order->id)
-                    ->where('product_id', $product_id)
-                    ->first();
-
-                if (!$orderProduct) {
-                    return response()->json(['message' => 'Product not found in cart'], 404);
-                }
-
-                $orderProduct->delete();
-                $order->save();
-
-                if ($order->orderProducts()->count() === 0) {
-                    $order->delete();
-                }
-
-                return response()->json(['message' => 'Product removed from cart'], 200);
-            });
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to remove product',
-                'error' => 'Database error occurred'
-            ], 500);
-        }
-    }
-
+ public function removeFromCart($product_id, Request $request)
+ {
+     try {
+         return DB::transaction(function () use ($product_id, $request) {
+             $order = Order::when($request->order_id, function ($query, $orderId) {
+                     return $query->where('id', $orderId);
+                 })
+                 ->first();
+ 
+             if (!$order || $order->user_id !== Auth::id()) {
+                 return response()->json(['message' => 'Cart not found'], 404);
+             }
+             if ($order->is_validated) {
+                return response()->json(['message' => 'Cannot modify a validated order'], 403);
+            }
+ 
+             $orderProduct = OrderProduct::where('order_id', $order->id)
+                 ->where('product_id', $product_id)
+                 ->first();
+ 
+             if (!$orderProduct) {
+                 return response()->json(['message' => 'Product not found in cart'], 404);
+             }
+ 
+             $orderProduct->delete();
+             $order->save();
+ 
+             if ($order->orderProducts()->count() === 0) {
+                 $order->delete();
+             }
+ 
+             return response()->json(['message' => 'Product removed from cart'], 200);
+         });
+     } catch (\Exception $e) {
+         return response()->json([
+             'message' => 'Failed to remove product',
+             'error' => 'Database error occurred'
+         ], 500);
+     }
+ }
+ 
 
     /**
  * @OA\Delete(
