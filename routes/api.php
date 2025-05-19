@@ -142,6 +142,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'deleteCoworking']);
         Route::post('/workspaces/coworking/{workspace_id}', [WorkspaceController::class, 'updateCoworking']);
         Route::post('/workspaces/studio/{workspace_id}', [WorkspaceController::class, 'updateStudio']);
+        Route::delete('/workspaces/{workspace_id}/coworking/images/{image_id}', [WorkspaceController::class, 'deleteCoworkingImage']);
+        Route::delete('/workspaces/{workspace_id}/studio/images/{image_id}', [WorkspaceController::class, 'deleteStudioImage']);
+
 
 
 

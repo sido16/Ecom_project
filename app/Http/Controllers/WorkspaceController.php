@@ -1620,4 +1620,215 @@ public function updateStudio(Request $request, $workspace_id)
         ], 500);
     }
 }
+
+/**
+ * @OA\Delete(
+ *     path="/workspaces/{workspace_id}/studio/images/{image_id}",
+ *     summary="Delete Studio Workspace Image",
+ *     description="Deletes an image associated with a studio workspace owned by the authenticated user.",
+ *     operationId="deleteStudioImage",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the workspace",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="image_id",
+ *         in="path",
+ *         description="ID of the image to delete",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Image deleted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Image deleted successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthenticated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace not found or not a studio",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found or not a studio")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to delete image"),
+ *             @OA\Property(property="error", type="string", example="Server error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+
+
+
+public function deleteStudioImage($workspace_id, $image_id)
+{
+    try {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+                // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->where('type', 'studio')
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found or not a studio',
+            ], 404);
+        }
+               // Find the image
+        $image = WorkspaceImage::where('workspace_id', $workspace->id)
+            ->where('id', $image_id)
+            ->first();
+
+        if (!$image) {
+            return response()->json([
+                'message' => 'Image not found',
+            ], 404);
+        }
+
+        if ($image->image_url) {
+            Storage::disk('public')->delete($image->image_url);
+        } // Delete the image record
+        $image->delete();
+
+        Log::info("Deleted image ID {$image_id} from workspace ID {$workspace->id}, User ID: " . Auth::id());
+
+        return response()->json([
+            'message' => 'Image deleted successfully',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to delete image ID {$image_id} from workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to delete image',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
+
+/**
+ * @OA\Delete(
+ *     path="/workspaces/{workspace_id}/coworking/images/{image_id}",
+ *     summary="Delete Coworking Workspace Image",
+ *     description="Deletes an image associated with a coworking workspace owned by the authenticated user.",
+ *     operationId="deleteCoworkingImage",
+ *     tags={"Workspaces"},
+ *     @OA\Parameter(
+ *         name="workspace_id",
+ *         in="path",
+ *         description="ID of the workspace",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="image_id",
+ *         in="path",
+ *         description="ID of the image to delete",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Image deleted successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Image deleted successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Unauthorized access",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="You are not authorized to delete images from this workspace")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Workspace or image not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Workspace not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Failed to delete image"),
+ *             @OA\Property(property="error", type="string", example="Server error occurred")
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
+public function deleteCoworkingImage($workspace_id, $image_id)
+{
+    try {
+        // Find the workspace
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('type', 'coworking')
+            ->first();
+
+        if (!$workspace) {
+            return response()->json([
+                'message' => 'Workspace not found',
+            ], 404);
+        }
+
+        // Check if user owns the workspace
+        if ($workspace->user_id !== Auth::id()) {
+            return response()->json([
+                'message' => 'You are not authorized to delete images from this workspace',
+            ], 403);
+        }
+
+        // Find the image
+        $image = WorkspaceImage::where('id', $image_id)
+            ->where('workspace_id', $workspace_id)
+            ->first();
+
+        if (!$image) {
+            return response()->json([
+                'message' => 'Image not found',
+            ], 404);
+        }
+
+        // Delete the image file from storage
+        if ($image->image_url) {
+            Storage::disk('public')->delete($image->image_url);
+        }
+
+        // Delete the image record from database
+        $image->delete();
+
+        return response()->json([
+            'message' => 'Image deleted successfully',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error("Failed to delete image from workspace ID {$workspace_id}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to delete image',
+            'error' => 'Server error occurred',
+        ], 500);
+    }
+}
 }
