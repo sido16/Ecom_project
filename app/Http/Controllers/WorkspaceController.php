@@ -817,7 +817,6 @@ public function getWorkspacesByType(Request $request, $type)
  */
 public function getWorkspaceById(Request $request, $workspace_id)
 {
-    dd("jhjgj");
     try {
         // Query workspace by ID, including all details and images
         $workspace = Workspace::where('id', $workspace_id)
