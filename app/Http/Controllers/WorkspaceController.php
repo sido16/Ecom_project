@@ -697,7 +697,7 @@ public function getWorkspacesByType(Request $request, $type)
         }
 
         $workspaces = $query->with([
-            'studio' ])->get();
+            'studio','coworking' ])->get();
         Log::info("Retrieved workspaces of type {$type}", ['count' => $workspaces->count()]);
 
         return response()->json([
@@ -1565,6 +1565,7 @@ public function updateStudio(Request $request, $workspace_id)
                 'description' => $request->description,
                 'opening_hours' => $request->opening_hours,
                 'picture' => $picturePath,
+                'is_active' => !$workspace->is_active,
             ]);
 
             // Update studio details

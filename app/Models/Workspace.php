@@ -47,4 +47,9 @@ class Workspace extends Model
     {
         return $this->hasMany(WorkspaceImage::class, 'workspace_id');
     }
+
+    public function workingHours()
+    {
+        return $this->hasMany(WorkingHour::class, 'workspace_id');
+    }
 }

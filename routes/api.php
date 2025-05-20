@@ -15,7 +15,7 @@ use App\Http\Controllers\SkillsController;
 use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WilayaController;
-
+use App\Http\Controllers\WorkingHourController;
 
  
 
@@ -144,8 +144,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workspaces/studio/{workspace_id}', [WorkspaceController::class, 'updateStudio']);
         Route::delete('/workspaces/{workspace_id}/coworking/images/{image_id}', [WorkspaceController::class, 'deleteCoworkingImage']);
         Route::delete('/workspaces/{workspace_id}/studio/images/{image_id}', [WorkspaceController::class, 'deleteStudioImage']);
-
-
+        Route::post('/workspaces/{workspace_id}/working-hours', [WorkingHourController::class, 'createWorkingHours']);
+        Route::put('/workspaces/{workspace_id}/working-hours', [WorkingHourController::class, 'updateWorkingHours']);
 
 
         Route::prefix('orders')->group(function () {

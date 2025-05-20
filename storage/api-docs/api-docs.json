@@ -7894,6 +7894,248 @@
                 }
             }
         },
+        "/workspaces/{workspace_id}/working-hours": {
+            "post": {
+                "tags": [
+                    "Working Hours"
+                ],
+                "summary": "Create working hours for a workspace",
+                "description": "Creates multiple working hour entries for a given workspace. Each entry includes day, opening and closing times, and whether the workspace is open.",
+                "operationId": "5713ef93eba73bbd6da177b39f25e4fd",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the workspace",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "required": [
+                                        "day",
+                                        "time_from",
+                                        "time_to",
+                                        "is_open"
+                                    ],
+                                    "properties": {
+                                        "day": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Monday",
+                                                "Tuesday",
+                                                "Wednesday",
+                                                "Thursday",
+                                                "Friday",
+                                                "Saturday",
+                                                "Sunday"
+                                            ],
+                                            "example": "Monday"
+                                        },
+                                        "time_from": {
+                                            "type": "string",
+                                            "format": "time",
+                                            "example": "09:00"
+                                        },
+                                        "time_to": {
+                                            "type": "string",
+                                            "format": "time",
+                                            "example": "17:00"
+                                        },
+                                        "is_open": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Working hours created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Working hours created successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "workspace_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "day": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "time_from": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "09:00:00"
+                                                    },
+                                                    "time_to": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "17:00:00"
+                                                    },
+                                                    "is_open": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Workspace not found or unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Workspace not found or unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/workspaces/{workspace_id}/working-hours": {
+            "put": {
+                "tags": [
+                    "Working Hours"
+                ],
+                "summary": "Update multiple working hours by ID",
+                "operationId": "4035a0f8f2b1211eb6e2f4078262fe9e",
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "path",
+                        "description": "ID of the workspace",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "day": {
+                                            "type": "string",
+                                            "example": "Monday"
+                                        },
+                                        "time_from": {
+                                            "type": "string",
+                                            "format": "time",
+                                            "example": "08:00"
+                                        },
+                                        "time_to": {
+                                            "type": "string",
+                                            "format": "time",
+                                            "example": "17:00"
+                                        },
+                                        "is_open": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Working hours updated successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "404": {
+                        "description": "Workspace or working hour not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/workspaces/studio/create": {
             "post": {
                 "tags": [
@@ -10462,6 +10704,10 @@
         {
             "name": "Wilayas",
             "description": "Wilayas"
+        },
+        {
+            "name": "Working Hours",
+            "description": "Working Hours"
         },
         {
             "name": "Workspaces",
