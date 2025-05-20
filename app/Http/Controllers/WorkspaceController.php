@@ -1519,7 +1519,6 @@ public function updateStudio(Request $request, $workspace_id)
         $workspace = Workspace::where('id', $workspace_id)
             ->where('user_id', Auth::id())
             ->where('type', 'studio')
-            ->where('is_active', true)
             ->first();
 
         if (!$workspace) {
