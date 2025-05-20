@@ -6,6 +6,7 @@ use App\Models\Studio;
 use App\Models\Workspace;
 use App\Models\WorkspaceImage;
 use App\Models\Coworking;
+use App\Models\WorkingHour;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+
+
 
 
 class WorkspaceController extends Controller
@@ -815,18 +818,18 @@ public function getWorkspacesByType(Request $request, $type)
  *     security={{"sanctum": {}}, {}}
  * )
  */
-public function getWorkspaceById(Request $request, $workspace_id)
+public function getWorkspaceById( $workspace_id)
 {
     try {
         // Query workspace by ID, including all details and images
         $workspace = Workspace::where('id', $workspace_id)
-            ->where('is_active', true)
             ->with([
                 'studio' => function ($query) {
                     $query->with('services:id,service');
                 },
                 'coworking',
-                'images'
+                'images',
+                'workingHours'
             ])
             ->first();
 
@@ -946,8 +949,7 @@ public function getWorkspacesByUser()
 
         // Query workspaces for the authenticated user, including studio and coworking details
         $workspaces = Workspace::where('user_id', Auth::id())
-            ->where('is_active', true)
-            ->with(['studio', 'coworking', 'images'])
+            ->with(['studio', 'coworking', 'images', 'workingHours'])
             ->get();
 
         Log::info("Retrieved workspaces for user ID " . Auth::id(), ['count' => $workspaces->count()]);
