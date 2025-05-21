@@ -722,7 +722,7 @@ public function clearCart()
 
 public function show($id)
 {
-    $order = Order::with(['user', 'supplier', 'wilaya', 'commune', 'orderProducts.product'])
+    $order = Order::with(['user', 'supplier', 'wilaya', 'commune', 'orderProducts.product.pictures'])
         ->where('id', $id)
         ->where('is_validated', true)
         ->first();
@@ -804,7 +804,7 @@ public function getByUser($user_id)
         return response()->json(['message' => 'Unauthorized access'], 403);
     }
 
-    $orders = Order::with(['supplier', 'wilaya', 'commune', 'orderProducts.product'])
+    $orders = Order::with(['supplier', 'wilaya', 'commune', 'orderProducts.product.pictures'])
         ->where('user_id', $user_id)
         ->get();
 
@@ -878,7 +878,7 @@ public function getBySupplier($supplier_id)
         return response()->json(['message' => 'Unauthorized access or supplier not found'], 403);
     }
 
-    $orders = Order::with(['user', 'wilaya', 'commune', 'orderProducts.product'])
+    $orders = Order::with(['user', 'wilaya', 'commune', 'orderProducts.product.pictures'])
         ->where('supplier_id', $supplier_id)
         ->get();
 
