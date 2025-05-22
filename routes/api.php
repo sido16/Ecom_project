@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Products
     Route::prefix('products')->group(function () {
+        Route::post('/search', [ProductController::class, 'search']);
         Route::post('/', [ProductController::class, 'store']);
         Route::post('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);

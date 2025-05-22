@@ -23,3 +23,35 @@ yarn-error.log
 /.zed
 # Allow Swagger documentation
 !public/api/documentation.json
+
+# Python virtual environments
+venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Flask and project-specific files
+flask.log
+uploads/
+
+# Dependency directories
+node_modules/
+
+# TensorFlow and ML-related files
+*.h5
+*.pb
+*.tflite
+*.ckpt
+tensorflow/
+
+# FAISS indexes (if saved to disk)
+*.index
+
+# Miscellaneous
+.DS_Store
+*.env
+*.log
