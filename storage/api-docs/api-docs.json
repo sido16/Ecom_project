@@ -3306,6 +3306,301 @@
                 ]
             }
         },
+        "/api/products/{productId}/reviews": {
+            "get": {
+                "tags": [
+                    "Product Reviews"
+                ],
+                "summary": "Get product reviews",
+                "description": "Fetches all reviews for a specific product, including rating statistics.",
+                "operationId": "getProductReviews",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of product reviews and rating statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_rating": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "review_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reviews retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Product Reviews"
+                ],
+                "summary": "Submit a product review",
+                "description": "Allows a user to submit a review for a product. Suppliers cannot review their own products.",
+                "operationId": "submitProductReview",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "description": "Rating between 1 and 5",
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "comment": {
+                                        "description": "Review comment",
+                                        "type": "string",
+                                        "example": "Excellent product!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Suppliers cannot review their own products"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{productId}/reviews/{reviewId}/reply": {
+            "post": {
+                "tags": [
+                    "Product Reviews"
+                ],
+                "summary": "Reply to a product review",
+                "description": "Allows a supplier to reply to a product review. Only one reply is allowed per review.",
+                "operationId": "replyToReview",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "comment": {
+                                        "description": "Reply to the review",
+                                        "type": "string",
+                                        "example": "Thank you for your feedback!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reply submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Only the supplier can reply to reviews"
+                    },
+                    "422": {
+                        "description": "Validation failed or reply already exists"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{productId}/reviews/{reviewId}": {
+            "delete": {
+                "tags": [
+                    "Product Reviews"
+                ],
+                "summary": "Delete a product review",
+                "description": "Allows a supplier or admin to delete a review for their product.",
+                "operationId": "deleteProductReview",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Only suppliers or admins can delete reviews"
+                    },
+                    "404": {
+                        "description": "Product or review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/service_providers/{serviceProvider}/portfolio/projects": {
             "post": {
                 "tags": [
@@ -6632,6 +6927,314 @@
                 ]
             }
         },
+        "/api/service-providers/{serviceProviderId}/reviews": {
+            "get": {
+                "tags": [
+                    "Service Provider Reviews"
+                ],
+                "summary": "List reviews for a service provider",
+                "description": "Retrieve all reviews for a given service provider including average and total rating stats.",
+                "operationId": "getServiceProviderReviews",
+                "parameters": [
+                    {
+                        "name": "serviceProviderId",
+                        "in": "path",
+                        "description": "Service Provider ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_rating": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 3.75
+                                                },
+                                                "review_count": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reviews retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service provider not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Service Provider Reviews"
+                ],
+                "summary": "Submit a review",
+                "description": "Allows an authenticated user to submit a review for a service provider, excluding the owner.",
+                "operationId": "submitServiceProviderReview",
+                "parameters": [
+                    {
+                        "name": "serviceProviderId",
+                        "in": "path",
+                        "description": "Service Provider ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 5
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Excellent service, highly recommended!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review successfully created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 8,
+                                                "rating": 5,
+                                                "comment": "Excellent service!",
+                                                "service_provider_id": 1
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Cannot review own service provider"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/service-providers/{serviceProviderId}/reviews/{reviewId}/reply": {
+            "post": {
+                "tags": [
+                    "Service Provider Reviews"
+                ],
+                "summary": "Reply to a review",
+                "description": "Allows the owner of the service provider to reply to a specific review.",
+                "operationId": "replyToServiceProviderReview",
+                "parameters": [
+                    {
+                        "name": "serviceProviderId",
+                        "in": "path",
+                        "description": "Service Provider ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 8
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Thank you for your kind words!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 8,
+                                                "reply": "Thank you!"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reply submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Only service provider owner can reply"
+                    },
+                    "422": {
+                        "description": "Reply already exists or validation error"
+                    },
+                    "404": {
+                        "description": "Service provider or review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/service-providers/{serviceProviderId}/reviews/{reviewId}": {
+            "delete": {
+                "tags": [
+                    "Service Provider Reviews"
+                ],
+                "summary": "Delete a review",
+                "description": "Allows a service provider owner or admin to delete a specific review.",
+                "operationId": "deleteServiceProviderReview",
+                "parameters": [
+                    {
+                        "name": "serviceProviderId",
+                        "in": "path",
+                        "description": "Service Provider ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 8
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete review"
+                    },
+                    "404": {
+                        "description": "Service provider or review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/skills": {
             "get": {
                 "tags": [
@@ -7755,6 +8358,314 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/suppliers/{supplierId}/reviews": {
+            "get": {
+                "tags": [
+                    "Supplier Reviews"
+                ],
+                "summary": "List reviews for a supplier",
+                "description": "Retrieve all reviews for a given supplier including average and total rating stats.",
+                "operationId": "getSupplierReviews",
+                "parameters": [
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_rating": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4
+                                                },
+                                                "review_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reviews retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Supplier Reviews"
+                ],
+                "summary": "Submit a review",
+                "description": "Allows an authenticated user to submit a review for a supplier, excluding the owner.",
+                "operationId": "submitSupplierReview",
+                "parameters": [
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 4
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Great supplier, very reliable!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review successfully created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 10,
+                                                "rating": 4,
+                                                "comment": "Great supplier!",
+                                                "supplier_id": 1
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Cannot review own supplier"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{supplierId}/reviews/{reviewId}/reply": {
+            "post": {
+                "tags": [
+                    "Supplier Reviews"
+                ],
+                "summary": "Reply to a review",
+                "description": "Allows the owner of the supplier to reply to a specific review.",
+                "operationId": "replyToSupplierReview",
+                "parameters": [
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Thank you for your feedback!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 10,
+                                                "reply": "Thank you!"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reply submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Only supplier owner can reply"
+                    },
+                    "422": {
+                        "description": "Reply already exists or validation error"
+                    },
+                    "404": {
+                        "description": "Supplier or review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{supplierId}/reviews/{reviewId}": {
+            "delete": {
+                "tags": [
+                    "Supplier Reviews"
+                ],
+                "summary": "Delete a review",
+                "description": "Allows a supplier owner or admin to delete a specific review.",
+                "operationId": "deleteSupplierReview",
+                "parameters": [
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete review"
+                    },
+                    "404": {
+                        "description": "Supplier or review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/wilayas": {
@@ -10642,9 +11553,317 @@
                     }
                 ]
             }
+        },
+        "/api/workspaces/{workspaceId}/reviews": {
+            "get": {
+                "tags": [
+                    "Workspace Reviews"
+                ],
+                "summary": "List reviews for a workspace",
+                "description": "Retrieve all reviews for a given workspace including average and total rating stats.",
+                "operationId": "getWorkspaceReviews",
+                "parameters": [
+                    {
+                        "name": "workspaceId",
+                        "in": "path",
+                        "description": "Workspace ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_rating": {
+                                                    "type": "integer",
+                                                    "example": 25
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.2
+                                                },
+                                                "review_count": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reviews retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Workspace Reviews"
+                ],
+                "summary": "Submit a review",
+                "description": "Allows an authenticated user to submit a review for a workspace, excluding the owner.",
+                "operationId": "submitWorkspaceReview",
+                "parameters": [
+                    {
+                        "name": "workspaceId",
+                        "in": "path",
+                        "description": "Workspace ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 5
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "This place was amazing!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review successfully created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 12,
+                                                "rating": 5,
+                                                "comment": "Great!",
+                                                "workspace_id": 1
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Cannot review own workspace"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/workspaces/{workspaceId}/reviews/{reviewId}/reply": {
+            "post": {
+                "tags": [
+                    "Workspace Reviews"
+                ],
+                "summary": "Reply to a review",
+                "description": "Allows the owner of the workspace to reply to a specific review.",
+                "operationId": "replyToWorkspaceReview",
+                "parameters": [
+                    {
+                        "name": "workspaceId",
+                        "in": "path",
+                        "description": "Workspace ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "comment"
+                                ],
+                                "properties": {
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Thank you for your feedback!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 15,
+                                                "reply": "Thanks!"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reply submitted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Only workspace owner can reply"
+                    },
+                    "422": {
+                        "description": "Reply already exists or validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/workspaces/{workspaceId}/reviews/{reviewId}": {
+            "delete": {
+                "tags": [
+                    "Workspace Reviews"
+                ],
+                "summary": "Delete a review",
+                "description": "Allows a workspace owner or admin to delete a specific review.",
+                "operationId": "deleteWorkspaceReview",
+                "parameters": [
+                    {
+                        "name": "workspaceId",
+                        "in": "path",
+                        "description": "Workspace ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete review"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "tags": [
+        {
+            "name": "Service Provider Reviews",
+            "description": "API Endpoints for managing service provider reviews"
+        },
+        {
+            "name": "Supplier Reviews",
+            "description": "API Endpoints for managing supplier reviews"
+        },
+        {
+            "name": "Workspace Reviews",
+            "description": "API Endpoints for managing workspace reviews"
+        },
         {
             "name": "Authentication",
             "description": "Authentication"
@@ -10672,6 +11891,10 @@
         {
             "name": "Products",
             "description": "Products"
+        },
+        {
+            "name": "Product Reviews",
+            "description": "Product Reviews"
         },
         {
             "name": "Portfolio",

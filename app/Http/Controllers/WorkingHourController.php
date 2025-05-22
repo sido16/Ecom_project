@@ -114,55 +114,56 @@ class WorkingHourController extends Controller
  */
 
     public function createWorkingHours(Request $request, $workspace_id)
-{
-    try {
-        $request->validate([
-            '*.day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            '*.time_from' => 'required|date_format:H:i',
-            '*.time_to' => 'required|date_format:H:i|after:*.time_from',
-            '*.is_open' => 'required|boolean',
-        ]);
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
-    }
-
-    $workspace = Workspace::where('id', $workspace_id)
-        ->where('user_id', Auth::id())
-        ->first();
-
-    if (!$workspace) {
-        return response()->json(['message' => 'Workspace not found or unauthorized'], 404);
-    }
-
-    return DB::transaction(function () use ($request, $workspace_id) {
-        $dayMap = [
-            'Monday' => 3,
-            'Tuesday' => 4,
-            'Wednesday' => 5,
-            'Thursday' => 6,
-            'Friday' => 7,
-            'Saturday' => 1,
-            'Sunday' => 2,
-        ];
-
-        $workingHours = [];
-
-        foreach ($request->all() as $hour) {
-            $workingHours[] = WorkingHour::create([
-                'workspace_id' => $workspace_id,
-                'day' => $dayMap[$hour['day']],
-                'time_from' => $hour['time_from'] . ':00',
-                'time_to' => $hour['time_to'] . ':00',
-                'is_open' => $hour['is_open'],
+    {
+        try {
+            $request->validate([
+                '*.day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+                '*.time_from' => 'nullable|date_format:H:i|required_if:*.is_open,true',
+                '*.time_to' => 'nullable|date_format:H:i|required_if:*.is_open,true|after:*.time_from',
+                '*.is_open' => 'required|boolean',
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
         }
 
-        return response()->json([
-            'message' => 'Working hours created successfully',
-            'data' => $workingHours,
-        ], 201);
-    });
-}
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$workspace) {
+            return response()->json(['message' => 'Workspace not found or unauthorized'], 404);
+        }
+
+        return DB::transaction(function () use ($request, $workspace_id) {
+            $dayMap = [
+                'Monday' => 3,
+                'Tuesday' => 4,
+                'Wednesday' => 5,
+                'Thursday' => 6,
+                'Friday' => 7,
+                'Saturday' => 1,
+                'Sunday' => 2,
+            ];
+
+            $workingHours = [];
+
+            foreach ($request->all() as $hour) {
+                $workingHours[] = WorkingHour::create([
+                    'workspace_id' => $workspace_id,
+                    'day' => $dayMap[$hour['day']],
+                    'time_from' => $hour['is_open'] && $hour['time_from'] ? $hour['time_from'] . ':00' : '00:00:00',
+                    'time_to' => $hour['is_open'] && $hour['time_to'] ? $hour['time_to'] . ':00' : '00:00:00',
+                    'is_open' => $hour['is_open'],
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Working hours created successfully',
+                'data' => $workingHours,
+            ], 201);
+        });
+    }
+
 
 /**
  * @OA\Put(
@@ -204,66 +205,69 @@ class WorkingHourController extends Controller
  *     )
  * )
  */
-public function updateWorkingHours(Request $request, $workspace_id)
-{
-    try {
-        $request->validate([
-            '*.id' => 'required|integer|exists:working_hours,id',
-            '*.day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            '*.time_from' => 'required|date_format:H:i',
-            '*.time_to' => 'required|date_format:H:i|after:*.time_from',
-            '*.is_open' => 'required|boolean',
-        ]);
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
-    }
-
-    $workspace = Workspace::where('id', $workspace_id)
-        ->where('user_id', Auth::id())
-        ->first();
-
-    if (!$workspace) {
-        return response()->json(['message' => 'Workspace not found or unauthorized'], 404);
-    }
-
-    $dayMap = [
-        'Monday' => 3,
-        'Tuesday' => 4,
-        'Wednesday' => 5,
-        'Thursday' => 6,
-        'Friday' => 7,
-        'Saturday' => 1,
-        'Sunday' => 2,
-    ];
-
-    return DB::transaction(function () use ($request, $workspace_id, $dayMap) {
-        $updatedHours = [];
-
-        foreach ($request->all() as $hour) {
-            $workingHour = WorkingHour::where('id', $hour['id'])
-                ->where('workspace_id', $workspace_id)
-                ->first();
-
-            if (!$workingHour) {
-                throw new \Exception("Working hour ID {$hour['id']} not found for this workspace.");
-            }
-
-            $workingHour->update([
-                'day' => $dayMap[$hour['day']],
-                'time_from' => $hour['time_from'] . ':00',
-                'time_to' => $hour['time_to'] . ':00',
-                'is_open' => $hour['is_open'],
+ public function updateWorkingHours(Request $request, $workspace_id)
+    {
+        try {
+            $request->validate([
+                '*.day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+                '*.time_from' => 'nullable|date_format:H:i|required_if:*.is_open,true',
+                '*.time_to' => 'nullable|date_format:H:i|required_if:*.is_open,true|after:*.time_from',
+                '*.is_open' => 'required|boolean',
             ]);
-
-            $updatedHours[] = $workingHour;
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
         }
 
-        return response()->json([
-            'message' => 'Working hours updated successfully',
-            'data' => $updatedHours,
-        ]);
-    });
-}
+        $workspace = Workspace::where('id', $workspace_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$workspace) {
+            return response()->json(['message' => 'Workspace not found or unauthorized'], 404);
+        }
+
+        $dayMap = [
+            'Monday' => 3,
+            'Tuesday' => 4,
+            'Wednesday' => 5,
+            'Thursday' => 6,
+            'Friday' => 7,
+            'Saturday' => 1,
+            'Sunday' => 2,
+        ];
+
+        return DB::transaction(function () use ($request, $workspace_id, $dayMap) {
+            $updatedHours = [];
+            $submittedDays = array_column($request->all(), 'day');
+
+            // Delete working hours for days not in the request
+            WorkingHour::where('workspace_id', $workspace_id)
+                ->whereNotIn('day', array_map(fn($day) => $dayMap[$day], $submittedDays))
+                ->delete();
+
+            foreach ($request->all() as $hour) {
+                $workingHour = WorkingHour::updateOrCreate(
+                    [
+                        'workspace_id' => $workspace_id,
+                        'day' => $dayMap[$hour['day']],
+                    ],
+                    [
+                        'time_from' => $hour['is_open'] && $hour['time_from'] ? $hour['time_from'] . ':00' : '00:00:00',
+                        'time_to' => $hour['is_open'] && $hour['time_to'] ? $hour['time_to'] . ':00' : '00:00:00',
+                        'is_open' => $hour['is_open'],
+                        'updated_at' => now(),
+                    ]
+                );
+                $updatedHours[] = $workingHour;
+            }
+
+            return response()->json([
+                'message' => 'Working hours updated successfully',
+                'data' => $updatedHours,
+            ]);
+        });
+    }
+
 
 
 }

@@ -16,8 +16,12 @@ use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WilayaController;
 use App\Http\Controllers\WorkingHourController;
+use App\Http\Controllers\WorkspaceReviewsController;
+use App\Http\Controllers\SupplierReviewsController;
+use App\Http\Controllers\ProductReviewsController;
+use App\Http\Controllers\ServiceProviderReviewsController;
 
- 
+
 
 
 
@@ -55,7 +59,7 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 */
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'getUser']); 
+    Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/user/update', [AuthController::class, 'update']);
     Route::put('/user/update-password', [AuthController::class, 'updatePassword']);
 });
@@ -127,10 +131,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('service-provider/{service_provider_id}', [ServiceOrderController::class, 'getByServiceProvider'])->whereNumber('service_provider_id');
     });
     //service_providers_projects
-    
-  
 
-    //sudios 
+
+
+    //sudios
         Route::post('/workspaces/studio/create', [WorkspaceController::class, 'createStudio']);
         Route::post('/workspaces/coworking/create', [WorkspaceController::class, 'createCoworking']);
         Route::post('/workspaces/{workspace_id}/studio/images', [WorkspaceController::class, 'insertStudioPictures']);
@@ -149,18 +153,39 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         Route::prefix('orders')->group(function () {
-        
+
             Route::patch('{id}/status', [OrderController::class, 'updateStatus'])->whereNumber('id');
             Route::get('{id}', [OrderController::class, 'show'])->whereNumber('id');
             Route::get('user/{user_id}', [OrderController::class, 'getByUser'])->whereNumber('user_id');
             Route::get('supplier/{supplier_id}', [OrderController::class, 'getBySupplier'])->whereNumber('supplier_id');
-        
+
         });
-        
+
+        // API routes for workspace reviews
+
+    Route::get('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'index']);
+    Route::post('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'storeReview']);
+    Route::post('/workspaces/{workspaceId}/reviews/{reviewId}/reply', [WorkspaceReviewsController::class, 'storeReply']);
+    Route::delete('/workspaces/{workspaceId}/reviews/{reviewId}', [WorkspaceReviewsController::class, 'destroy']);
+
+// Supplier Reviews
+    Route::get('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'index']);
+    Route::post('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'storeReview']);
+    Route::post('/suppliers/{supplierId}/reviews/{reviewId}/reply', [SupplierReviewsController::class, 'storeReply']);
+    Route::delete('/suppliers/{supplierId}/reviews/{reviewId}', [SupplierReviewsController::class, 'destroy']);
 
 
+// Service Provider Reviews
+    Route::get('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'index']);
+    Route::post('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'storeReview']);
+    Route::post('/service_providers/{serviceProviderId}/reviews/{reviewId}/reply', [ServiceProviderReviewsController::class, 'storeReply']);
+    Route::delete('/service_providers/{serviceProviderId}/reviews/{reviewId}', [ServiceProviderReviewsController::class, 'destroy']);
 
-
+    // Product Reviews
+    Route::get('/products/{productId}/reviews', [ProductReviewsController::class, 'index']);
+    Route::post('/products/{productId}/reviews', [ProductReviewsController::class, 'storeReview']);
+    Route::post('/products/{productId}/reviews/{reviewId}/reply', [ProductReviewsController::class, 'storeReply']);
+    Route::delete('/products/{productId}/reviews/{reviewId}', [ProductReviewsController::class, 'destroy']);
 
 
  });

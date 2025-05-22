@@ -818,7 +818,7 @@ public function getWorkspacesByType(Request $request, $type)
  *     security={{"sanctum": {}}, {}}
  * )
  */
-public function getWorkspaceById( $workspace_id)
+public function getWorkspaceById($workspace_id)
 {
     try {
         // Query workspace by ID, including all details and images
