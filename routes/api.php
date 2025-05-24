@@ -81,13 +81,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products
     Route::prefix('products')->group(function () {
         Route::post('/search', [ProductController::class, 'search']);
+        Route::post('/search-by-id', [ProductController::class, 'searchById']);
         Route::post('/', [ProductController::class, 'store']);
         Route::post('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::get('/{id}', [ProductController::class, 'show']);
         Route::get('/{id}', [ProductController::class, 'showWithSupplier'])->whereNumber('id');
         Route::get('/{id}/store', [ProductController::class, 'getStore']);
-        Route::get('/{type}', [ProductController::class, 'index'])->where('type', 'workshop|importer|merchant');;
+        Route::get('/{type}', [ProductController::class, 'index'])->where('type', 'workshop|importer|merchant');
         Route::get('/', [ProductController::class, 'all']);
     });
 
@@ -157,7 +158,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('supplier/{supplier_id}', [OrderController::class, 'getBySupplier'])->whereNumber('supplier_id');
         
         });
-        
+        Route::get('/test', function () {
+            \Log::info('Test route hit');
+            return response()->json(['message' => 'Test successful'], 200);
+        });
 
 
 
