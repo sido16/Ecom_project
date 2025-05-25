@@ -6,6 +6,7 @@ use App\Models\ServiceProvider;
 use App\Models\Skill;
 use App\Models\SkillDomain;
 use App\Models\ServiceProviderPicture;
+use App\Models\ServiceProviderReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -93,7 +94,7 @@ class ServiceProviderController extends Controller
            'skill_ids' => 'required|array|min:1',
            'skill_ids.*' => 'exists:skills,id',
        ]);
-   
+
        try {
            $serviceProvider = ServiceProvider::create([
                'user_id' => Auth::id(),
@@ -101,9 +102,9 @@ class ServiceProviderController extends Controller
                'description' => $request->description,
                'starting_price' => $request->starting_price,
            ]);
-   
+
            $serviceProvider->skills()->attach($request->skill_ids);
-   
+
            return response()->json([
                'message' => 'Service provider created successfully',
                'data' => $serviceProvider
@@ -116,8 +117,8 @@ class ServiceProviderController extends Controller
        }
    }
 
-   
-    
+
+
     /**
  * @OA\Post(
  *     path="/api/service-providers/portfolio/pictures/{id}",
@@ -450,7 +451,7 @@ class ServiceProviderController extends Controller
 public function show($id)
 {
     try {
-        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain','user'])->findOrFail($id);
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures','skillDomain','user','reviews'])->findOrFail($id);
         return response()->json(['data' => $serviceProvider], 200);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json(['message' => 'Service provider not found'], 404);
@@ -561,7 +562,7 @@ public function show($id)
 public function showByUser($user_id)
 {
     try {
-        $serviceProvider = ServiceProvider::with(['skills', 'pictures', 'skillDomain', 'user'])
+        $serviceProvider = ServiceProvider::with(['skills', 'pictures', 'skillDomain', 'user' ,'reviews'])
             ->where('user_id', $user_id)
             ->firstOrFail();
         $serviceProviderData = $serviceProvider->toArray();
@@ -652,7 +653,7 @@ public function showByUser($user_id)
     public function index()
     {
         try {
-            $serviceProviders = ServiceProvider::with(['user', 'skills', 'pictures', 'skillDomain'])->get()->map(function ($provider) {
+            $serviceProviders = ServiceProvider::with(['user', 'skills', 'pictures', 'skillDomain','reviews'])->get()->map(function ($provider) {
                 $providerData = $provider->toArray();
                 $providerData['user'] = $provider->user ? ['full_name' => $provider->user->full_name] : null;
                 return $providerData;
@@ -795,7 +796,7 @@ public function showByUser($user_id)
         }
     }
 
-    
+
         /**
      * @OA\Get(
      *     path="/api/service-providers/{id}/portfolio",
@@ -954,14 +955,14 @@ public function showByUser($user_id)
         try {
             $picture = ServiceProviderPicture::findOrFail($id);
             $serviceProvider = ServiceProvider::findOrFail($picture->service_provider_id);
-    
+
             if ($serviceProvider->user_id !== Auth::id()) {
                 return response()->json(['message' => 'Not authorized to delete this picture'], 403);
             }
-    
+
             Storage::delete($picture->picture);
             $picture->delete();
-    
+
             return response()->json(['message' => 'Picture deleted successfully'], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'Picture not found'], 404);
@@ -972,10 +973,10 @@ public function showByUser($user_id)
             ], 500);
         }
     }
-    
 
 
-     
+
+
 
 }
 

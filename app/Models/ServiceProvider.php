@@ -33,5 +33,10 @@ class ServiceProvider extends Model
     {
         return $this->hasMany(ServiceProviderPicture::class, 'service_provider_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(ServiceProviderReview::class, 'service_provider_id');
+    }
 }
 ?>

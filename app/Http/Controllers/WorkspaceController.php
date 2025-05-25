@@ -7,6 +7,7 @@ use App\Models\Workspace;
 use App\Models\WorkspaceImage;
 use App\Models\Coworking;
 use App\Models\WorkingHour;
+use App\Models\WorkspaceReview;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -695,12 +696,10 @@ public function getWorkspacesByType(Request $request, $type)
             ->where('is_active', true);
 
         // If authenticated, optionally filter by user
-        if (Auth::check()) {
-            $query->where('user_id', Auth::id());
-        }
+
 
         $workspaces = $query->with([
-            'studio','coworking' ])->get();
+            'studio','coworking','reviews'])->get();
         Log::info("Retrieved workspaces of type {$type}", ['count' => $workspaces->count()]);
 
         return response()->json([
@@ -829,7 +828,8 @@ public function getWorkspaceById($workspace_id)
                 },
                 'coworking',
                 'images',
-                'workingHours'
+                'workingHours',
+                'reviews'
             ])
             ->first();
 

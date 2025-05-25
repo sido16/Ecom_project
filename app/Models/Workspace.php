@@ -52,4 +52,9 @@ class Workspace extends Model
     {
         return $this->hasMany(WorkingHour::class, 'workspace_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(WorkspaceReview::class, 'workspace_id');
+    }
 }
