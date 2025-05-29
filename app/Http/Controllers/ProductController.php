@@ -7,7 +7,7 @@ use App\Models\ProductPicture;
 use App\Models\workshop;
 use App\Models\Importer;
 use App\Models\Merchant;
-
+use App\Models\ProductFeature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ProductImport;
@@ -204,6 +204,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('Starting product creation', ['request_data' => $request->all()]);
+    
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'required|exists:suppliers,id',
             'name' => 'required|string|max:100',
@@ -214,14 +216,16 @@ class ProductController extends Controller
             'minimum_quantity' => 'required|integer|min:0',
             'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
+    
         if ($validator->fails()) {
+            \Log::warning('Validation failed', ['errors' => $validator->errors()]);
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
             ], 422);
         }
-
+    
+        \Log::info('Creating product');
         $product = Product::create($request->only([
             'supplier_id',
             'name',
@@ -231,24 +235,74 @@ class ProductController extends Controller
             'quantity',
             'minimum_quantity'
         ]));
-
+    
+        $imagePaths = [];
+        $imageIds = [];
+        $featureData = [];
         if ($request->hasFile('pictures') && is_array($request->file('pictures'))) {
+            \Log::info('Processing product images', ['image_count' => count($request->file('pictures'))]);
+            $multipartData = [];
             foreach ($request->file('pictures') as $picture) {
                 if ($picture->isValid()) {
-                    ProductPicture::create([
+                    $path = $picture->store('product_pictures', 'public');
+                    $productPicture = ProductPicture::create([
                         'product_id' => $product->id,
-                        'picture' => $picture->store('product_pictures', 'public')
+                        'picture' => $path
                     ]);
+                    $imagePaths[] = $path;
+                    $imageIds[] = $productPicture->id;
+                    \Log::info('Image saved', ['path' => $path, 'product_picture_id' => $productPicture->id]);
+    
+                    $multipartData[] = [
+                        'name' => 'images',
+                        'contents' => file_get_contents(storage_path('app/public/' . $path)),
+                        'filename' => basename($path)
+                    ];
+                }
+            }
+    
+            if (!empty($multipartData)) {
+                foreach ($imageIds as $id) {
+                    $multipartData[] = [
+                        'name' => 'image_ids[]',
+                        'contents' => (string)$id
+                    ];
+                }
+    
+                \Log::info('Sending all images to Flask for feature extraction', ['image_count' => count($multipartData) - count($imageIds)]);
+                $client = new \GuzzleHttp\Client();
+                try {
+                    $response = $client->post('http://127.0.0.1:5000/extract-features', [
+                        'multipart' => $multipartData
+                    ]);
+                    $featureData = json_decode($response->getBody(), true);
+                    \Log::info('Feature extraction successful', ['response' => $featureData]);
+    
+                    // Save features to the product_features table
+                    if (isset($featureData['features']) && is_array($featureData['features'])) {
+                        foreach ($featureData['features'] as $imageId => $features) {
+                            \Log::info('Saving features for image', ['image_id' => $imageId]);
+                            ProductFeature::create([
+                                'image_id' => $imageId,
+                                'features' => $features
+                            ]);
+                        }
+                    } else {
+                        \Log::warning('No features found in Flask response', ['response' => $featureData]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to extract features', ['error' => $e->getMessage(), 'image_paths' => $imagePaths]);
                 }
             }
         }
-
+    
+        \Log::info('Product creation completed', ['product_id' => $product->id, 'image_count' => count($imagePaths)]);
         return response()->json([
             'message' => 'Product created successfully',
-            'data' => $product->load('pictures')
+            'data' => $product->load('pictures'),
+            'features' => $featureData ?: null
         ], 201);
     }
-
     /**
      * @OA\Post(
      *     path="/api/products/{id}",
@@ -920,8 +974,325 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Search for similar products based on an uploaded image.
+     *
+     * Upload an image to find similar products using image feature extraction and FAISS index search.
+     *
+     * @OA\Post(
+     *     path="/api/search",
+     *     summary="Search for similar products",
+     *     description="Upload an image to search for similar products based on image features.",
+     *     operationId="searchProducts",
+     *     tags={"Product Search"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="image",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="The image file to search for similar products (JPEG, PNG, JPG, max 2MB)",
+     *                     example="sample.jpg"
+     *                 ),
+     *                 required={"image"}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response with similar products",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Similar products found"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=7),
+     *                     @OA\Property(property="product_id", type="integer", example=3),
+     *                     @OA\Property(property="picture", type="string", example="product_pictures/image1.png"),
+     *                     @OA\Property(
+     *                         property="product",
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=3),
+     *                         @OA\Property(property="supplier_id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Sample Product"),
+     *                         @OA\Property(property="description", type="string", example="A sample product"),
+     *                         @OA\Property(property="category_id", type="integer", example=2),
+     *                         @OA\Property(property="price", type="number", format="float", example=99.99),
+     *                         @OA\Property(property="quantity", type="integer", example=10),
+     *                         @OA\Property(property="minimum_quantity", type="integer", example=5)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No similar products or images found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No matching products found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="image",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="The image field is required.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Search failed"),
+     *             @OA\Property(property="error", type="string", example="FAISS index not available")
+     *         )
+     *     ),
+     *     security={{"bearerAuth": {}}}
+     * )
+     */
+    public function search(Request $request)
+{
+    \Log::info('Starting image search', ['request_data' => $request->all()]);
 
+    $validator = Validator::make($request->all(), [
+        'image' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+    ]);
+
+    if ($validator->fails()) {
+        \Log::warning('Validation failed', ['errors' => $validator->errors()]);
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    $image = $request->file('image');
+    $client = new \GuzzleHttp\Client();
+    try {
+        $response = $client->post('http://127.0.0.1:5000/search', [
+            'multipart' => [
+                [
+                    'name' => 'image',
+                    'contents' => file_get_contents($image->getRealPath()),
+                    'filename' => $image->getClientOriginalName()
+                ]
+            ]
+        ]);
+        $data = json_decode($response->getBody(), true);
+        \Log::info('Search successful', ['response' => $data]);
+
+        if (isset($data['similar_image_ids']) && !empty($data['similar_image_ids'])) {
+            $productPictures = ProductPicture::whereIn('id', $data['similar_image_ids'])
+                ->with('product')
+                ->get();
+            \Log::info('Fetched similar products', ['product_pictures' => $productPictures->toArray()]);
+
+            if ($productPictures->isEmpty()) {
+                \Log::info('No matching products found for image IDs', ['image_ids' => $data['similar_image_ids']]);
+                return response()->json(['message' => 'No matching products found'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Similar products found',
+                'data' => $productPictures
+            ], 200);
+        }
+
+        \Log::info('No similar image IDs returned from Flask', ['response' => $data]);
+        return response()->json(['message' => 'No similar images found'], 404);
+    } catch (\Exception $e) {
+        \Log::error('Search failed', ['error' => $e->getMessage()]);
+        return response()->json(['message' => 'Search failed', 'error' => $e->getMessage()], 500);
+    }
 }
+
+
+
+/**
+     * Search for similar products based on an existing image ID.
+     *
+     * @OA\Post(
+     *     path="/api/products/search-by-id",
+     *     summary="Search for similar products by image ID",
+     *     description="Search for similar products using the ID of an existing product image.",
+     *     operationId="searchProductsById",
+     *     tags={"Product Search"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     description="The ID of the product picture to search with",
+     *                     example=7
+     *                 ),
+     *                 required={"id"}
+     *             )
+     *         ),
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     description="The ID of the product picture to search with",
+     *                     example=7
+     *                 ),
+     *                 required={"id"}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response with similar products",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Similar products found"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=7),
+     *                     @OA\Property(property="product_id", type="integer", example=3),
+     *                     @OA\Property(property="picture", type="string", example="product_pictures/image1.png"),
+     *                     @OA\Property(
+     *                         property="product",
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=3),
+     *                         @OA\Property(property="supplier_id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Sample Product"),
+     *                         @OA\Property(property="description", type="string", example="A sample product"),
+     *                         @OA\Property(property="category_id", type="integer", example=2),
+     *                         @OA\Property(property="price", type="number", format="float", example=99.99),
+     *                         @OA\Property(property="quantity", type="integer", example=10),
+     *                         @OA\Property(property="minimum_quantity", type="integer", example=5)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No similar products or image not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No matching products found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="The id field is required.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Search failed"),
+     *             @OA\Property(property="error", type="string", example="FAISS index not available")
+     *         )
+     *     ),
+     *     security={{"bearerAuth": {}}}
+     * )
+     */
+public function searchById(Request $request)
+    {
+        \Log::info('Starting image search by ID', ['request_data' => $request->all()]);
+
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:product_pictures,id'
+        ]);
+
+        if ($validator->fails()) {
+            \Log::warning('Validation failed', ['errors' => $validator->errors()]);
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Fetch the ProductPicture by ID
+        $productPicture = ProductPicture::find($request->input('id'));
+        if (!$productPicture) {
+            \Log::warning('Product picture not found', ['id' => $request->input('id')]);
+            return response()->json(['message' => 'Product picture not found'], 404);
+        }
+
+        // Get the image file path from storage
+        $imagePath = $productPicture->picture; // e.g., "product_pictures/image1.png"
+        $fullPath = storage_path('app/public/' . $imagePath);
+
+        // Check if the image file exists
+        if (!file_exists($fullPath)) {
+            \Log::error('Image file not found on server', ['path' => $fullPath]);
+            return response()->json(['message' => 'Image file not found on server'], 404);
+        }
+
+        $client = new \GuzzleHttp\Client();
+        try {
+            $response = $client->post('http://127.0.0.1:5000/search', [
+                'multipart' => [
+                    [
+                        'name' => 'image',
+                        'contents' => file_get_contents($fullPath),
+                        'filename' => basename($imagePath)
+                    ]
+                ]
+            ]);
+            $data = json_decode($response->getBody(), true);
+            \Log::info('Search by ID successful', ['response' => $data]);
+
+            if (isset($data['similar_image_ids']) && !empty($data['similar_image_ids'])) {
+                $productPictures = ProductPicture::whereIn('id', $data['similar_image_ids'])
+                    ->with('product')
+                    ->get();
+                \Log::info('Fetched similar products by ID', ['product_pictures' => $productPictures->toArray()]);
+
+                if ($productPictures->isEmpty()) {
+                    \Log::info('No matching products found for image IDs', ['image_ids' => $data['similar_image_ids']]);
+                    return response()->json(['message' => 'No matching products found'], 404);
+                }
+
+                return response()->json([
+                    'message' => 'Similar products found',
+                    'data' => $productPictures
+                ], 200);
+            }
+
+            \Log::info('No similar image IDs returned from Flask', ['response' => $data]);
+            return response()->json(['message' => 'No similar images found'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Search by ID failed', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Search failed', 'error' => $e->getMessage()], 500);
+        }
+    }
+}
+
+
 
 
 

@@ -12,4 +12,9 @@ class ProductPicture extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+    public function productFeature()
+    {
+        return $this->hasOne(ProductFeature::class, 'image_id');
+    }
 }
