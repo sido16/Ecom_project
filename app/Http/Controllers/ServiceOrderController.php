@@ -659,7 +659,7 @@ public function getByServiceProvider($service_provider_id)
         $orders = ServiceOrder::with([
             'user' ,
             'serviceProvider.user' => function ($query) {
-                $query->select('id', 'full_name');
+                $query->select('id', 'full_name',);
             },
             'skill' => function ($query) {
                 $query->select('id', 'name');

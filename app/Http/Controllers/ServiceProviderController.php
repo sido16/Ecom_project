@@ -655,7 +655,7 @@ public function showByUser($user_id)
         try {
             $serviceProviders = ServiceProvider::with(['user', 'skills', 'pictures', 'skillDomain','reviews'])->get()->map(function ($provider) {
                 $providerData = $provider->toArray();
-                $providerData['user'] = $provider->user ? ['full_name' => $provider->user->full_name] : null;
+                $providerData['user'] = $provider->user ? ['full_name' => $provider->user->full_name ,'picture' => $provider->user->picture] : null;
                 return $providerData;
             });
             return response()->json(['data' => $serviceProviders], 200);
