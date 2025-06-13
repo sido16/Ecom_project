@@ -7,11 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens;
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -38,6 +37,20 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     public function suppliers()
     {
         return $this->hasMany(Supplier::class, 'user_id');
@@ -63,16 +76,28 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(ServiceProvider::class, 'user_id');
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function savedServiceProviders()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsToMany(ServiceProvider::class, 'saved_service_providers', 'user_id', 'service_provider_id')
+                    ->withTimestamps();
+    }
+
+    public function savedWorkspaces()
+    {
+        return $this->belongsToMany(Workspace::class, 'saved_workspaces', 'user_id', 'workspace_id')
+                    ->withTimestamps();
+    }
+
+    public function savedProducts()
+    {
+        return $this->belongsToMany(Product::class, 'saved_products', 'user_id', 'product_id')
+                    ->withTimestamps();
+    }
+
+    public function savedSuppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'saved_suppliers', 'user_id', 'supplier_id')
+                    ->withTimestamps();
     }
 }
+?>

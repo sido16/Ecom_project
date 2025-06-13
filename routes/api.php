@@ -20,6 +20,11 @@ use App\Http\Controllers\WorkspaceReviewsController;
 use App\Http\Controllers\SupplierReviewsController;
 use App\Http\Controllers\ProductReviewsController;
 use App\Http\Controllers\ServiceProviderReviewsController;
+use App\Http\Controllers\ServiceProviderSaveController;
+use App\Http\Controllers\WorkspaceSaveController;
+use App\Http\Controllers\ProductSaveController;
+use App\Http\Controllers\SupplierSaveController;
+
 
 
 
@@ -198,6 +203,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/{productId}/reviews/{reviewId}/reply', [ProductReviewsController::class, 'storeReply']);
     Route::delete('/products/{productId}/reviews/{reviewId}', [ProductReviewsController::class, 'destroy']);
 
+
+
+    Route::prefix('saved-service-providers')->group(function () {
+        Route::post('/save', [ServiceProviderSaveController::class, 'save']);
+        Route::post('/unsave', [ServiceProviderSaveController::class, 'unsave']);
+        Route::get('/', [ServiceProviderSaveController::class, 'getSaved']);
+        Route::post('/is-saved', [ServiceProviderSaveController::class, 'isSaved']);
+    });
+
+    Route::prefix('saved-workspaces')->group(function () {
+        Route::post('/save', [WorkspaceSaveController::class, 'save']);
+        Route::post('/unsave', [WorkspaceSaveController::class, 'unsave']);
+        Route::get('/', [WorkspaceSaveController::class, 'getSaved']);
+        Route::post('/is-saved', [WorkspaceSaveController::class, 'isSaved']);
+    });
+
+    Route::prefix('saved-products')->group(function () {
+        Route::post('/save', [ProductSaveController::class, 'save']);
+        Route::post('/unsave', [ProductSaveController::class, 'unsave']);
+        Route::get('/', [ProductSaveController::class, 'getSaved']);
+        Route::post('/is-saved', [ProductSaveController::class, 'isSaved']);
+    });
+
+    Route::prefix('saved-suppliers')->group(function () {
+        Route::post('/save', [SupplierSaveController::class, 'save']);
+        Route::post('/unsave', [SupplierSaveController::class, 'unsave']);
+        Route::get('/', [SupplierSaveController::class, 'getSaved']);
+        Route::post('/is-saved', [SupplierSaveController::class, 'isSaved']);
+    });
 
  });
 

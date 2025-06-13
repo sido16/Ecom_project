@@ -8,6 +8,7 @@ use App\Models\workshop;
 use App\Models\Importer;
 use App\Models\Merchant;
 use App\Models\ProductFeature;
+use App\Models\ProductReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ProductImport;
@@ -205,7 +206,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         \Log::info('Starting product creation', ['request_data' => $request->all()]);
-    
+
         $validator = Validator::make($request->all(), [
             'supplier_id' => 'required|exists:suppliers,id',
             'name' => 'required|string|max:100',
@@ -216,7 +217,7 @@ class ProductController extends Controller
             'minimum_quantity' => 'required|integer|min:0',
             'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-    
+
         if ($validator->fails()) {
             \Log::warning('Validation failed', ['errors' => $validator->errors()]);
             return response()->json([
@@ -224,7 +225,7 @@ class ProductController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-    
+
         \Log::info('Creating product');
         $product = Product::create($request->only([
             'supplier_id',
@@ -235,7 +236,7 @@ class ProductController extends Controller
             'quantity',
             'minimum_quantity'
         ]));
-    
+
         $imagePaths = [];
         $imageIds = [];
         $featureData = [];
@@ -252,7 +253,7 @@ class ProductController extends Controller
                     $imagePaths[] = $path;
                     $imageIds[] = $productPicture->id;
                     \Log::info('Image saved', ['path' => $path, 'product_picture_id' => $productPicture->id]);
-    
+
                     $multipartData[] = [
                         'name' => 'images',
                         'contents' => file_get_contents(storage_path('app/public/' . $path)),
@@ -260,7 +261,7 @@ class ProductController extends Controller
                     ];
                 }
             }
-    
+
             if (!empty($multipartData)) {
                 foreach ($imageIds as $id) {
                     $multipartData[] = [
@@ -268,7 +269,7 @@ class ProductController extends Controller
                         'contents' => (string)$id
                     ];
                 }
-    
+
                 \Log::info('Sending all images to Flask for feature extraction', ['image_count' => count($multipartData) - count($imageIds)]);
                 $client = new \GuzzleHttp\Client();
                 try {
@@ -277,7 +278,7 @@ class ProductController extends Controller
                     ]);
                     $featureData = json_decode($response->getBody(), true);
                     \Log::info('Feature extraction successful', ['response' => $featureData]);
-    
+
                     // Save features to the product_features table
                     if (isset($featureData['features']) && is_array($featureData['features'])) {
                         foreach ($featureData['features'] as $imageId => $features) {
@@ -295,7 +296,7 @@ class ProductController extends Controller
                 }
             }
         }
-    
+
         \Log::info('Product creation completed', ['product_id' => $product->id, 'image_count' => count($imagePaths)]);
         return response()->json([
             'message' => 'Product created successfully',
@@ -822,7 +823,7 @@ class ProductController extends Controller
     public function showWithSupplier($id)
     {
         try {
-            $product = Product::with(['pictures', 'supplier'])
+            $product = Product::with(['pictures', 'supplier', 'reviews'])
                 ->where('visibility', 'public')
                 ->findOrFail($id);
 
@@ -1301,4 +1302,4 @@ public function searchById(Request $request)
 
 
 
-    
+
