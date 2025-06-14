@@ -18,7 +18,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Hadj Furniture Workshop',
             'address' => '456 Algiers St, Algiers, Algeria',
             'description' => 'Custom furniture design and manufacturing',
-            'picture' => 'storage/images/logos/figma.png',
+            'picture' => 'logos/figma.png',
             'domain_id' => 1,
         ]);
     
@@ -31,7 +31,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Ahmed Metal Works',
             'address' => '789 Oran St, Oran, Algeria',
             'description' => 'Precision metal fabrication and welding',
-            'picture' => 'storage/images/logos/sketch.png',
+            'picture' => 'logos/sketch.png',
             'domain_id' => 2,
         ]);
     
@@ -45,7 +45,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Tech Solutions Merchant',
             'address' => '123 Constantine St, Constantine, Algeria',
             'description' => 'Technology and electronics retail',
-            'picture' => 'storage/images/logos/google.png',
+            'picture' => 'logos/google.png',
             'domain_id' => 3,
         ]);
 
@@ -58,7 +58,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Fashion Boutique',
             'address' => '321 Annaba St, Annaba, Algeria',
             'description' => 'Luxury fashion and accessories',
-            'picture' => 'storage/images/logos/dribbble.png',
+            'picture' => 'logos/dribbble.png',
             'domain_id' => 4,
         ]);
 
@@ -72,7 +72,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Global Tech Imports',
             'address' => '555 Tlemcen St, Tlemcen, Algeria',
             'description' => 'International technology imports',
-            'picture' => 'storage/images/logos/aws.png',
+            'picture' => 'logos/aws.png',
             'domain_id' => 1,
         ]);
 
@@ -85,7 +85,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Luxury Goods Importers',
             'address' => '777 Bejaia St, Bejaia, Algeria',
             'description' => 'High-end luxury goods import',
-            'picture' => 'storage/images/logos/linkedin.png',
+            'picture' => 'logos/linkedin.png',
             'domain_id' => 2,
         ]);
 
@@ -99,7 +99,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Creative Design Workshop',
             'address' => '888 Setif St, Setif, Algeria',
             'description' => 'Creative design and prototyping',
-            'picture' => 'storage/images/logos/behance.png',
+            'picture' => 'logos/behance.png',
             'domain_id' => 3,
         ]);
 
@@ -113,7 +113,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Digital Solutions Store',
             'address' => '999 Mostaganem St, Mostaganem, Algeria',
             'description' => 'Digital products and services',
-            'picture' => 'storage/images/logos/github.png',
+            'picture' => 'logos/github.png',
             'domain_id' => 4,
         ]);
 
@@ -127,7 +127,7 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Agricultural Imports Co',
             'address' => '111 Tiaret St, Tiaret, Algeria',
             'description' => 'Agricultural equipment and supplies',
-            'picture' => 'storage/images/logos/bootstrap.png',
+            'picture' => 'logos/bootstrap.png',
             'domain_id' => 1,
         ]);
 
@@ -141,14 +141,12 @@ class SupplierSeeder extends Seeder
             'business_name' => 'Innovation Hub',
             'address' => '222 Blida St, Blida, Algeria',
             'description' => 'Technology innovation and development',
-            'picture' => 'storage/images/logos/react.png',
+            'picture' => 'logos/react.png',
             'domain_id' => 2,
         ]);
 
         Workshop::create([
             'supplier_id' => $supplier10->id,
         ]);
-
-       
     }
 }

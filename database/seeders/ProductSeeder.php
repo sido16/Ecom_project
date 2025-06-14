@@ -20,7 +20,7 @@ class ProductSeeder extends Seeder
             $multipart = [];
             foreach ($imagesData as $data) {
                 // Construct the full path for each image
-                $fullPath = 'E:/PFE/easycom_backend/storage/images/products/' . $data['path'];
+                $fullPath = 'E:/PFE/easycom_backend/public/storage/images/products/' . $data['path'];
                 
                 if (!file_exists($fullPath)) {
                     \Log::warning('Image file not found for feature extraction', ['path' => $fullPath]);
