@@ -230,7 +230,7 @@ class ProductSeeder extends Seeder
 
             $picture = ProductPicture::create([
                 'product_id' => $product->id,
-                'picture' => 'products/' . $productData['image'],
+                'picture' => 'images/products/' . $productData['image'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
