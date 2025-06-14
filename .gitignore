@@ -3,8 +3,8 @@ git/.phpunit.cache
 /public/build
 /public/hot
 # /public/storage
-/storage/*.key
-/storage/pail
+# /storage/*.key
+# /storage/pail
 /vendor
 
 .env.backup
@@ -55,3 +55,6 @@ tensorflow/
 .DS_Store
 *.env
 *.log
+
+!storage/images/products/
+!storage/images/products/*
