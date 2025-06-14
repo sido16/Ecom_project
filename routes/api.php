@@ -110,6 +110,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/cart/update', [OrderController::class, 'updateCart']);
         Route::delete('/cart/remove/{product_id}', [OrderController::class, 'removeFromCart'])->whereNumber('product_id');
         Route::delete('/cart/clear', [OrderController::class, 'clearCart']);
+        Route::patch('{id}/status', [OrderController::class, 'updateStatus'])->whereNumber('id');
+        Route::get('{id}', [OrderController::class, 'show'])->whereNumber('id');
+        Route::get('user/{user_id}', [OrderController::class, 'getByUser'])->whereNumber('user_id');
+        Route::get('supplier/{supplier_id}', [OrderController::class, 'getBySupplier'])->whereNumber('supplier_id');
+
 
     });
 
@@ -158,50 +163,35 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workspaces/{workspace_id}/working-hours', [WorkingHourController::class, 'createWorkingHours']);
         Route::put('/workspaces/{workspace_id}/working-hours', [WorkingHourController::class, 'updateWorkingHours']);
 
+       
 
-        Route::prefix('orders')->group(function () {
+    // API routes for workspace reviews
 
-            Route::patch('{id}/status', [OrderController::class, 'updateStatus'])->whereNumber('id');
-            Route::get('{id}', [OrderController::class, 'show'])->whereNumber('id');
-            Route::get('user/{user_id}', [OrderController::class, 'getByUser'])->whereNumber('user_id');
-            Route::get('supplier/{supplier_id}', [OrderController::class, 'getBySupplier'])->whereNumber('supplier_id');
+        Route::get('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'index']);
+        Route::post('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'storeReview']);
+        Route::post('/workspaces/{workspaceId}/reviews/{reviewId}/reply', [WorkspaceReviewsController::class, 'storeReply']);
+        Route::delete('/workspaces/{workspaceId}/reviews/{reviewId}', [WorkspaceReviewsController::class, 'destroy']);
 
-        });
-        Route::get('/test', function () {
-            \Log::info('Test route hit');
-            return response()->json(['message' => 'Test successful'], 200);
-        });
-
-        // API routes for workspace reviews
-
-    Route::get('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'index']);
-    Route::post('/workspaces/{workspaceId}/reviews', [WorkspaceReviewsController::class, 'storeReview']);
-    Route::post('/workspaces/{workspaceId}/reviews/{reviewId}/reply', [WorkspaceReviewsController::class, 'storeReply']);
-    Route::delete('/workspaces/{workspaceId}/reviews/{reviewId}', [WorkspaceReviewsController::class, 'destroy']);
-
-// Supplier Reviews
-    Route::get('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'index']);
-    Route::post('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'storeReview']);
-    Route::post('/suppliers/{supplierId}/reviews/{reviewId}/reply', [SupplierReviewsController::class, 'storeReply']);
-    Route::delete('/suppliers/{supplierId}/reviews/{reviewId}', [SupplierReviewsController::class, 'destroy']);
-        Route::get('/test', function () {
-            \Log::info('Test route hit');
-            return response()->json(['message' => 'Test successful'], 200);
-        });
+    // Supplier Reviews
+        Route::get('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'index']);
+        Route::post('/suppliers/{supplierId}/reviews', [SupplierReviewsController::class, 'storeReview']);
+        Route::post('/suppliers/{supplierId}/reviews/{reviewId}/reply', [SupplierReviewsController::class, 'storeReply']);
+        Route::delete('/suppliers/{supplierId}/reviews/{reviewId}', [SupplierReviewsController::class, 'destroy']);
+           
 
 
 
-// Service Provider Reviews
-    Route::get('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'index']);
-    Route::post('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'storeReview']);
-    Route::post('/service_providers/{serviceProviderId}/reviews/{reviewId}/reply', [ServiceProviderReviewsController::class, 'storeReply']);
-    Route::delete('/service_providers/{serviceProviderId}/reviews/{reviewId}', [ServiceProviderReviewsController::class, 'destroy']);
+    // Service Provider Reviews
+        Route::get('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'index']);
+        Route::post('/service_providers/{serviceProviderId}/reviews', [ServiceProviderReviewsController::class, 'storeReview']);
+        Route::post('/service_providers/{serviceProviderId}/reviews/{reviewId}/reply', [ServiceProviderReviewsController::class, 'storeReply']);
+        Route::delete('/service_providers/{serviceProviderId}/reviews/{reviewId}', [ServiceProviderReviewsController::class, 'destroy']);
 
     // Product Reviews
-    Route::get('/products/{productId}/reviews', [ProductReviewsController::class, 'index']);
-    Route::post('/products/{productId}/reviews', [ProductReviewsController::class, 'storeReview']);
-    Route::post('/products/{productId}/reviews/{reviewId}/reply', [ProductReviewsController::class, 'storeReply']);
-    Route::delete('/products/{productId}/reviews/{reviewId}', [ProductReviewsController::class, 'destroy']);
+        Route::get('/products/{productId}/reviews', [ProductReviewsController::class, 'index']);
+        Route::post('/products/{productId}/reviews', [ProductReviewsController::class, 'storeReview']);
+        Route::post('/products/{productId}/reviews/{reviewId}/reply', [ProductReviewsController::class, 'storeReply']);
+        Route::delete('/products/{productId}/reviews/{reviewId}', [ProductReviewsController::class, 'destroy']);
 
 
 

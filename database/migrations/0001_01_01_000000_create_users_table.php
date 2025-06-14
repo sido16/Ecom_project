@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone_number', 10)->unique(); 
             $table->string('password');
-            $table->string('role')->default('user');
+            $table->enum('role', ['user', 'admin'])->default('user');
             $table->string('picture')->nullable(); // Nullable picture 
             $table->string('address')->nullable(); // Nullable address
             $table->string('city')->nullable();    // Nullable city

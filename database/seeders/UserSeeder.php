@@ -49,5 +49,15 @@ class UserSeeder extends Seeder
         'role' => 'user',
         'email_verified_at' => now(),
     ]);
+
+    User::create([
+        'full_name' => 'Admin',
+        'email' => 'admin@gmail.com',
+        'password' => Hash::make('Pass1234'),
+        'phone_number' => '0555023456',
+        'address' => '123 Algiers St, Algiers, Algeria',
+        'role' => 'admin',
+        'email_verified_at' => now(),
+    ]);
 }
 }
