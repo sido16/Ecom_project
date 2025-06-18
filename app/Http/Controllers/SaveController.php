@@ -63,7 +63,14 @@ abstract class SaveController extends Controller
     public function getSaved(): JsonResponse
     {
         $user = Auth::user();
-        $savedItems = $user->{$this->relationName}()->get();
+        $savedItems = $user->{$this->relationName}();
+
+        // If the model is Product, include the pictures relationship
+        if ($this->model === \App\Models\Product::class) {
+            $savedItems = $savedItems->with('pictures');
+        }
+
+        $savedItems = $savedItems->get();
 
         return response()->json([
             'message' => 'Saved items retrieved successfully',

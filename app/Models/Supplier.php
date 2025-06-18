@@ -43,4 +43,9 @@ class Supplier extends Model
     {
         return $this->hasOne(Merchant::class, 'supplier_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(SupplierReview::class, 'supplier_id');
+    }
 }

@@ -759,7 +759,7 @@ class SupplierController extends Controller
         ], 200);
     }
 
-    
+
     /**
      * @OA\Get(
      *     path="/api/suppliers",
@@ -818,7 +818,7 @@ class SupplierController extends Controller
     public function index()
     {
         try {
-            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain'])->get()->map(function ($supplier) {
+            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain','reviews'])->get()->map(function ($supplier) {
                 $supplierData = $supplier->toArray();
                 $supplierData['type'] = $supplier->workshop ? 'workshop' : ($supplier->importer ? 'importer' : ($supplier->merchant ? 'merchant' : null));
                 unset(
@@ -839,6 +839,6 @@ class SupplierController extends Controller
         }
     }
 
-    
+
 
 }

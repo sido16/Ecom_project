@@ -962,7 +962,7 @@ class ProductController extends Controller
     public function all(Request $request)
     {
         try {
-            $products = Product::with('pictures')
+            $products = Product::with('pictures','reviews')
                 ->where('visibility', 'public')
                 ->get();
 
