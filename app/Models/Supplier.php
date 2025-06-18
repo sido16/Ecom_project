@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Supplier extends Model
 {
+    use Notifiable;
+
     protected $fillable = [
         'user_id',
         'business_name',
@@ -14,6 +17,7 @@ class Supplier extends Model
         'picture',
         'domain_id',
     ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

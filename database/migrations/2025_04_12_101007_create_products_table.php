@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('visibility', ['public', 'private']);
             $table->unsignedInteger('quantity')->nullable();
             $table->unsignedInteger('minimum_quantity')->nullable();
+            $table->boolean('clearance')->default(false);
             $table->timestamps();
         });
     }

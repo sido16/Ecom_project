@@ -24,6 +24,8 @@ use App\Http\Controllers\ServiceProviderSaveController;
 use App\Http\Controllers\WorkspaceSaveController;
 use App\Http\Controllers\ProductSaveController;
 use App\Http\Controllers\SupplierSaveController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\NotificationController;
 
 
 
@@ -67,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/user/update', [AuthController::class, 'update']);
     Route::put('/user/update-password', [AuthController::class, 'updatePassword']);
+    Route::get('/user/notifications', [UserController::class, 'getNotifications']);
 });
 
 // routes/api.php
@@ -226,10 +229,6 @@ Route::middleware('auth:sanctum')->group(function () {
  });
 
 
-
-
-
-
 // Public Routes
 Route::get('/domains', [DomainController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -240,6 +239,36 @@ Route::get('wilayas/{wilaya_id}/communes', [WilayaController::class, 'getCommune
 
 
 
+/*
+|--------------------------------------------------------------------------
+| Notification API Routes
+|--------------------------------------------------------------------------
+|
+| Here are the notification routes for your application. These routes
+| are loaded by the RouteServiceProvider within a group which is assigned
+| the "api" middleware group and requires authentication.
+|
+*/
+
+// All routes require authentication
+Route::middleware(['auth:sanctum'])->group(function () {
+    
+    // Get all notifications with filtering and pagination
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    
+    // Get specific notification types
+    Route::get('/notifications/order-status', [NotificationController::class, 'getOrderStatusNotifications']);
+    Route::get('/notifications/order-validated', [NotificationController::class, 'getOrderValidatedNotifications']);
+    Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);
+    
+    // Mark notifications as read
+    Route::patch('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+    
+    // Delete notifications
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+    
+});
 
 
 

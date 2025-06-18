@@ -53,4 +53,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderProduct::class);
     }
+
+    public function routeNotificationForDatabase()
+    {
+        return $this->supplier_id; // Notify the supplier
+    }
 }

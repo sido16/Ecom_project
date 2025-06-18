@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Supplier;
+use App\Models\User;
 
 class OrderController extends Controller
 {
@@ -94,7 +95,18 @@ public function buyNow(Request $request)
         ]);
 
         $product->decrement('quantity', $request->quantity);
-
+        
+         // Simple notification sending
+         try {
+            $supplier = Supplier::find($product->supplier_id);
+            if ($supplier) {
+                $supplier->notify(new \App\Notifications\OrderValidatedNotification($order));
+                Log::info('Notification sent to supplier', ['supplier_id' => $supplier->id, 'order_id' => $order->id]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Notification failed', ['error' => $e->getMessage(), 'order_id' => $order->id]);
+        }
+        
         return response()->json([
             'message'  => 'Order created successfully',
             'order_id' => $order->id,
@@ -274,7 +286,7 @@ public function buyNow(Request $request)
     
                 Log::info("Order validated for user_id=$userId, order_id={$order->id}");
             }
-    
+        
             return response()->json([
                 'message'   => 'All carts validated successfully',
                 'order_ids' => $orders->pluck('id'),
@@ -973,22 +985,40 @@ public function updateStatus(Request $request, $id)
 
     // Allow only the supplier OR user concerned with the order to update it
     $user = Auth::user();
-
     $userSupplierId = $user->suppliers()->first()?->id;
 
     if ($order->supplier_id !== $userSupplierId && $order->user_id !== $user->id) {
         return response()->json(['message' => 'Not authorized to update this order'], 403);
     }
 
-    $order->status = $request->input('status');
-    $order->save();
+    // Store old status before updating
+    $oldStatus = $order->status;
+    $newStatus = $request->input('status');
+
+    // Only send notification if status actually changed
+    if ($oldStatus !== $newStatus) {
+        $order->status = $newStatus;
+        $order->save();
+
+        // Send notification to the customer (order owner)
+        try {
+            $customer = User::find($order->user_id);
+            if ($customer) {
+                $customer->notify(new \App\Notifications\OrderStatusUpdatedNotification($order, $oldStatus, $newStatus));
+            }
+        } catch (\Exception $e) {
+            Log::error('Status notification failed', [
+                'error' => $e->getMessage(),
+                'order_id' => $order->id
+            ]);
+        }
+    }
 
     return response()->json([
         'message' => 'Order status updated successfully',
         'order' => $order,
     ]);
 }
-
 
 
 

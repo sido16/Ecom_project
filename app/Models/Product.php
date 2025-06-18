@@ -18,6 +18,7 @@ class Product extends Model
         'visibility',
         'quantity',
         'minimum_quantity',
+        'clearance',
     ];
 
     protected $casts = [
