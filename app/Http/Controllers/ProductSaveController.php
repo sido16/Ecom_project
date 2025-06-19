@@ -12,4 +12,15 @@ class ProductSaveController extends SaveController
         $this->relationName = 'savedProducts';
         $this->idField = 'product_id';
     }
+
+    public function getSaved(): \Illuminate\Http\JsonResponse
+    {
+        $user = \Auth::user();
+        $savedProducts = $user->savedProducts()->with(['pictures', 'supplier'])->get();
+
+        return response()->json([
+            'message' => 'Saved products retrieved successfully',
+            'data' => $savedProducts,
+        ], 200);
+    }
 }
