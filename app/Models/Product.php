@@ -55,4 +55,15 @@ class Product extends Model
         return $this->hasMany(ProductReview::class, 'product_id');
     }
 
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_products', 'product_id', 'user_id')
+                    ->withTimestamps();
+    }
+
+    public function isSavedByUser($userId)
+    {
+        return $this->savedByUsers()->where('user_id', $userId)->exists();
+    }
+
 }

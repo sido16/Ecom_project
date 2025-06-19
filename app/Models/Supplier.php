@@ -47,4 +47,15 @@ class Supplier extends Model
     {
         return $this->hasOne(Merchant::class, 'supplier_id');
     }
+
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_suppliers', 'supplier_id', 'user_id')
+                    ->withTimestamps();
+    }
+
+    public function isSavedByUser($userId)
+    {
+        return $this->savedByUsers()->where('user_id', $userId)->exists();
+    }
 }
