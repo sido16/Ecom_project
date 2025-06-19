@@ -759,7 +759,7 @@ class SupplierController extends Controller
         ], 200);
     }
 
-    
+
     /**
      * @OA\Get(
      *     path="/api/suppliers",
@@ -818,9 +818,16 @@ class SupplierController extends Controller
     public function index()
     {
         try {
-            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain'])->get()->map(function ($supplier) {
+            $user = auth()->user();
+            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain'])->get()->map(function ($supplier) use ($user){
                 $supplierData = $supplier->toArray();
                 $supplierData['type'] = $supplier->workshop ? 'workshop' : ($supplier->importer ? 'importer' : ($supplier->merchant ? 'merchant' : null));
+
+                if ($user) {
+                    $supplierData['is_saved'] = $supplier->isSavedByUser($user->id);
+                }
+
+
                 unset(
                     $supplierData['workshop'],
                     $supplierData['importer'],
@@ -839,6 +846,6 @@ class SupplierController extends Controller
         }
     }
 
-    
+
 
 }

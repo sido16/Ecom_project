@@ -564,15 +564,23 @@ public function showByUser($user_id)
     try {
         $serviceProvider = ServiceProvider::with(['skills', 'pictures', 'skillDomain', 'user' ,'reviews'])
             ->where('user_id', $user_id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$serviceProvider) {
+            return response()->json([
+                'message' => 'Service provider not found',
+                'data' => null
+            ], 404);
+        }
+
         $serviceProviderData = $serviceProvider->toArray();
         $serviceProviderData['user'] = $serviceProvider->user ? [
             'full_name' => $serviceProvider->user->full_name,
             'picture' => $serviceProvider->user->picture
         ] : null;
+
         return response()->json(['data' => $serviceProviderData], 200);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return response()->json(['message' => 'Service provider not found'], 404);
+
     } catch (\Exception $e) {
         return response()->json([
             'message' => 'Failed to retrieve service provider',

@@ -988,9 +988,17 @@ class ProductController extends Controller
     public function all(Request $request)
     {
         try {
+            $user = auth()->user();
             $products = Product::with('pictures')
                 ->where('visibility', 'public')
                 ->get();
+
+            // Add saved status for each product if user is authenticated
+            if ($user) {
+                $products->each(function ($product) use ($user) {
+                    $product->is_saved = $product->isSavedByUser($user->id);
+                });
+            }
 
             return response()->json(['data' => $products], 200);
         } catch (\Exception $e) {
