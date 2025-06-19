@@ -81,6 +81,12 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
+     *                     property="clearance",
+     *                     type="boolean",
+     *                     description="Whether the product is on clearance",
+     *                     example=false
+     *                 ),
+     *                 @OA\Property(
      *                     property="pictures[]",
      *                     type="array",
      *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
@@ -149,6 +155,11 @@ class ProductController extends Controller
      *                     example=10
      *                 ),
      *                 @OA\Property(
+     *                     property="clearance",
+     *                     type="boolean",
+     *                     example=false
+     *                 ),
+     *                 @OA\Property(
      *                     property="created_at",
      *                     type="string",
      *                     format="date-time",
@@ -215,6 +226,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
             'minimum_quantity' => 'required|integer|min:0',
+            'clearance' => 'nullable|boolean',
             'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -234,7 +246,8 @@ class ProductController extends Controller
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity'
+            'minimum_quantity',
+            'clearance'
         ]));
 
         $imagePaths = [];
@@ -371,6 +384,12 @@ class ProductController extends Controller
      *                     example=5
      *                 ),
      *                 @OA\Property(
+     *                     property="clearance",
+     *                     type="boolean",
+     *                     description="Whether the product is on clearance",
+     *                     example=true
+     *                 ),
+     *                 @OA\Property(
      *                     property="pictures[]",
      *                     type="array",
      *                     description="Array of product images (JPEG, PNG, JPG, max 2MB each)",
@@ -447,6 +466,11 @@ class ProductController extends Controller
      *                     property="minimum_quantity",
      *                     type="integer",
      *                     example=5
+     *                 ),
+     *                 @OA\Property(
+     *                     property="clearance",
+     *                     type="boolean",
+     *                     example=true
      *                 ),
      *                 @OA\Property(
      *                     property="created_at",
@@ -526,6 +550,7 @@ class ProductController extends Controller
             'price' => 'sometimes|numeric|min:0',
             'quantity' => 'sometimes|integer|min:0',
             'minimum_quantity' => 'sometimes|integer|min:0',
+            'clearance' => 'nullable|boolean',
             'pictures.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
             'images_to_delete.*' => 'sometimes|integer|exists:product_pictures,id',
         ]);
@@ -544,7 +569,8 @@ class ProductController extends Controller
             'category_id',
             'price',
             'quantity',
-            'minimum_quantity'
+            'minimum_quantity',
+            'clearance'
         ]);
 
         $product->update($data);
@@ -1289,6 +1315,80 @@ public function searchById(Request $request)
         } catch (\Exception $e) {
             \Log::error('Search by ID failed', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Search failed', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/products/clearance/all",
+     *     summary="Get Clearance Products",
+     *     description="Retrieves all products that are marked for clearance.",
+     *     operationId="getClearanceProducts",
+     *     tags={"Products"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Products retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Clearance products retrieved successfully"),
+     *             @OA\Property(property="data", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="supplier_id", type="integer", example=1),
+     *                 @OA\Property(property="category_id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Red T-shirt"),
+     *                 @OA\Property(property="price", type="number", example=10.00),
+     *                 @OA\Property(property="description", type="string", example="Comfortable cotton t-shirt"),
+     *                 @OA\Property(property="visibility", type="string", example="public"),
+     *                 @OA\Property(property="quantity", type="integer", example=100),
+     *                 @OA\Property(property="minimum_quantity", type="integer", example=1),
+     *                 @OA\Property(property="clearance", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                 @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                 @OA\Property(property="pictures", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="product_id", type="integer", example=1),
+     *                     @OA\Property(property="picture", type="string", example="/storage/product_pictures/red1.jpg"),
+     *                     @OA\Property(property="created_at", type="string", example="2025-01-01T00:00:00.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", example="2025-01-01T00:00:00.000000Z")
+     *                 ))
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve clearance products"),
+     *             @OA\Property(property="error", type="string", example="Database error occurred")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+    public function getClearanceProducts()
+    {
+        try {
+            $products = Product::with('pictures')
+                ->where('visibility', 'public')
+                ->where('clearance', true)
+                ->get();
+
+            if ($products->isEmpty()) {
+                return response()->json([
+                    'message' => 'No clearance products found'
+                ], 200);
+            }
+
+            return response()->json([
+                'message' => 'Clearance products retrieved successfully',
+                'data' => $products
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Failed to retrieve clearance products: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to retrieve clearance products',
+                'error' => 'Database error occurred'
+            ], 500);
         }
     }
 }

@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ProductController::class, 'show']);
         Route::get('/{id}', [ProductController::class, 'showWithSupplier'])->whereNumber('id');
         Route::get('/{id}/store', [ProductController::class, 'getStore']);
+        Route::get('/clearance/all', [ProductController::class, 'getClearanceProducts']);
         Route::get('/{type}', [ProductController::class, 'index'])->where('type', 'workshop|importer|merchant');
         Route::get('/', [ProductController::class, 'all']);
     });

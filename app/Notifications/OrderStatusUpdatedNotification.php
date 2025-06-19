@@ -22,8 +22,31 @@ class OrderStatusUpdatedNotification extends Notification
         return ['database'];
     }
 
-    public function toArray($notifiable)
+    public function toDatabase($notifiable)
     {
+        // Store only essential data - other info will be retrieved dynamically
+        return [
+            'order_id' => $this->order->id,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+            'type' => 'status_update',
+            'created_at' => now()->toDateTimeString(),
+        ];
+    }
+
+    // Method to get dynamic data when displaying notification
+    public function getDynamicData()
+    {
+        $order = \App\Models\Order::with(['supplier'])->find($this->order->id);
+        
+        if (!$order) {
+            return null;
+        }
+
+        // Get supplier/store name and picture
+        $storeName = $order->supplier->business_name ?? 'Unknown Store';
+        $storePicture = $order->supplier->logo ?? null;
+
         $statusMessages = [
             'pending' => 'Your order is pending confirmation',
             'processing' => 'Your order is being processed',
@@ -31,12 +54,10 @@ class OrderStatusUpdatedNotification extends Notification
         ];
 
         return [
-            'order_id' => $this->order->id,
-            'message' => "Order #{$this->order->id} status updated to: {$this->newStatus}",
+            'store_name' => $storeName,
+            'store_picture' => $storePicture,
+            'message' => "Order #{$order->id} status updated to: {$this->newStatus}",
             'status_message' => $statusMessages[$this->newStatus] ?? "Status updated to {$this->newStatus}",
-            'old_status' => $this->oldStatus,
-            'new_status' => $this->newStatus,
-            'supplier_name' => $this->order->supplier->business_name ?? 'Unknown Supplier',
         ];
     }
 }
