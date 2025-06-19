@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Supplier;
 use App\Models\User;
+use Illuminate\Notifications\Notification;
+use App\Notifications\OrderValidatedNotification;
+use App\Notifications\OrderStatusUpdatedNotification;
 
 class OrderController extends Controller
 {
@@ -98,13 +101,21 @@ public function buyNow(Request $request)
         
          // Simple notification sending
          try {
-            $supplier = Supplier::find($product->supplier_id);
-            if ($supplier) {
-                $supplier->notify(new \App\Notifications\OrderValidatedNotification($order));
-                Log::info('Notification sent to supplier', ['supplier_id' => $supplier->id, 'order_id' => $order->id]);
+            $supplier = Supplier::with('user')->find($product->supplier_id);
+            if ($supplier && $supplier->user) {
+                // Send notification to the user who owns the supplier
+                $supplier->user->notify(new OrderValidatedNotification($order));
+                Log::info('Notification sent to supplier user', [
+                    'user_id' => $supplier->user->id, 
+                    'supplier_id' => $supplier->id, 
+                    'order_id' => $order->id
+                ]);
             }
         } catch (\Exception $e) {
-            Log::error('Notification failed', ['error' => $e->getMessage(), 'order_id' => $order->id]);
+            Log::error('Notification failed', [
+                'error' => $e->getMessage(), 
+                'order_id' => $order->id
+            ]);
         }
         
         return response()->json([
@@ -1004,7 +1015,13 @@ public function updateStatus(Request $request, $id)
         try {
             $customer = User::find($order->user_id);
             if ($customer) {
-                $customer->notify(new \App\Notifications\OrderStatusUpdatedNotification($order, $oldStatus, $newStatus));
+                $customer->notify(new OrderStatusUpdatedNotification($order, $oldStatus, $newStatus));
+                Log::info('Order status update notification sent to user', [
+                    'user_id' => $customer->id,
+                    'order_id' => $order->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus
+                ]);
             }
         } catch (\Exception $e) {
             Log::error('Status notification failed', [

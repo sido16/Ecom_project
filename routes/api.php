@@ -252,23 +252,19 @@ Route::get('wilayas/{wilaya_id}/communes', [WilayaController::class, 'getCommune
 */
 
 // All routes require authentication
-Route::middleware(['auth:sanctum'])->group(function () {
-    
-    // Get all notifications with filtering and pagination
+Route::middleware('auth:sanctum')->group(function () {
+    // Get user notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
-    
-    // Get specific notification types
+    // Get only order status update notifications
     Route::get('/notifications/order-status', [NotificationController::class, 'getOrderStatusNotifications']);
-    Route::get('/notifications/order-validated', [NotificationController::class, 'getOrderValidatedNotifications']);
-    Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);
-    
-    // Mark notifications as read
-    Route::patch('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
-    Route::patch('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
-    
-    // Delete notifications
+    // Get unread notifications count
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+    // Mark specific notification as read
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    // Mark all notifications as read
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    // Delete notification
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
-    
 });
 
 
