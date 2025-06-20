@@ -989,7 +989,7 @@ class ProductController extends Controller
     {
         try {
             $user = auth()->user();
-            $products = Product::with('pictures')
+            $products = Product::with('pictures','reviews')
                 ->where('visibility', 'public')
                 ->get();
 

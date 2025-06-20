@@ -48,6 +48,11 @@ class Supplier extends Model
         return $this->hasOne(Merchant::class, 'supplier_id');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(SupplierReview::class, 'supplier_id');
+    }
+
     public function savedByUsers()
     {
         return $this->belongsToMany(User::class, 'saved_suppliers', 'supplier_id', 'user_id')

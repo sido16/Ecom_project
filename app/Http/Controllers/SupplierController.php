@@ -819,7 +819,7 @@ class SupplierController extends Controller
     {
         try {
             $user = auth()->user();
-            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain'])->get()->map(function ($supplier) use ($user){
+            $suppliers = Supplier::with(['workshop', 'importer', 'merchant', 'domain','reviews'])->get()->map(function ($supplier) use ($user){
                 $supplierData = $supplier->toArray();
                 $supplierData['type'] = $supplier->workshop ? 'workshop' : ($supplier->importer ? 'importer' : ($supplier->merchant ? 'merchant' : null));
 

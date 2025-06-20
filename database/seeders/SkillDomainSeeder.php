@@ -19,7 +19,10 @@ class SkillDomainSeeder extends Seeder
             ['name' => 'Development'],
             ['name' => 'Marketing'],
             ['name' => 'Content Creation'],
-            ['name' => 'Consulting'],
+            ['name' => 'Voice over'],
+            ['name' => 'Media buyer'],
+            ['name' => 'Confiramtion'],
+            
         ];
 
         foreach ($domains as $domain) {
