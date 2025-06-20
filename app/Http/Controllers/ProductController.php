@@ -1376,7 +1376,7 @@ public function searchById(Request $request)
     public function getClearanceProducts()
     {
         try {
-            $products = Product::with('pictures')
+            $products = Product::with('pictures','reviews')
                 ->where('visibility', 'public')
                 ->where('clearance', true)
                 ->get();
