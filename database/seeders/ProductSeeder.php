@@ -15,13 +15,13 @@ class ProductSeeder extends Seeder
     {
         try {
             $client = new Client();
-            
+
             // Prepare multipart data
             $multipart = [];
             foreach ($imagesData as $data) {
                 // Construct the full path for each image
-                $fullPath = 'E:/PFE/easycom_backend/public/storage/images/products/' . $data['path'];
-                
+                $fullPath = 'C:/Users/hadjb/Documents/easycom/backend/Ecom_project/public/storage/images/products/' . $data['path'];
+
                 if (!file_exists($fullPath)) {
                     \Log::warning('Image file not found for feature extraction', ['path' => $fullPath]);
                     continue;
@@ -57,7 +57,7 @@ class ProductSeeder extends Seeder
             ]);
 
             $featureData = json_decode($response->getBody(), true);
-            
+
             if (isset($featureData['features']) && is_array($featureData['features'])) {
                 foreach ($featureData['features'] as $imgId => $features) {
                     ProductFeature::create([
@@ -152,7 +152,7 @@ class ProductSeeder extends Seeder
                 'minimum_quantity' => 1,
                 'image' => 'product-7.jpg'
             ],
-            [
+             [
                 'supplier_id' => 2,
                 'category_id' => 2,
                 'name' => 'Phone Case',
@@ -161,7 +161,7 @@ class ProductSeeder extends Seeder
                 'quantity' => 8,
                 'minimum_quantity' => 1,
                 'image' => 'product-8.jpg'
-            ],
+            ], 
             [
                 'supplier_id' => 2,
                 'category_id' => 2,
@@ -211,6 +211,56 @@ class ProductSeeder extends Seeder
                 'quantity' => 8,
                 'minimum_quantity' => 1,
                 'image' => 'product-15.png'
+            ],
+            [
+                'supplier_id' => 2,
+                'category_id' => 2,
+                'name' => 'Asus Laptop ',
+                'price' => 200.00,
+                'description' => 'laptop',
+                'quantity' => 8,
+                'minimum_quantity' => 1,
+                'image' => 'product-16.jpg'
+            ],
+            [
+                'supplier_id' => 2,
+                'category_id' => 2,
+                'name' => 'Msi Gaming Laptop',
+                'price' => 200.00,
+                'description' => 'Msi Gaming laptop',
+                'quantity' => 8,
+                'minimum_quantity' => 1,
+                'image' => 'product-17.png'
+            ],
+            [
+                'supplier_id' => 2,
+                'category_id' => 2,
+                'name' => 'Asus ROG Laptop',
+                'price' => 200.00,
+                'description' => 'New Asus ROG laptop',
+                'quantity' => 8,
+                'minimum_quantity' => 1,
+                'image' => 'product-18.jpg'
+            ],
+            [
+                'supplier_id' => 2,
+                'category_id' => 2,
+                'name' => 'Alienware Laptop',
+                'price' => 200.00,
+                'description' => 'New Alienware laptop',
+                'quantity' => 8,
+                'minimum_quantity' => 1,
+                'image' => 'product-19.jpg'
+            ],
+            [
+                'supplier_id' => 2,
+                'category_id' => 2,
+                'name' => 'Alienware white edition ',
+                'price' => 200.00,
+                'description' => 'New Alienware laptop',
+                'quantity' => 8,
+                'minimum_quantity' => 1,
+                'image' => 'product-20.jpg'
             ]
         ];
 
